@@ -1,4 +1,4 @@
-import { useState, useRef } from "react";
+import { useState, useRef, useEffect } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -7,10 +7,10 @@ import { STATUSES, STATUS_MAP, PRIORITY_MAP } from "@/lib/statuses";
 import { terminInfo, fmtDate } from "@/lib/termin";
 import { api, fileUrl } from "@/lib/api";
 import { toast } from "sonner";
-import CadViewer from "@/components/CadViewer";
+import FilePreview from "@/components/FilePreview";
 import {
   Upload, FileText, Trash2, Download, Loader2, Pencil, Boxes, Ruler, Layers,
-  User, Building2, Cog, ChevronRight, ArrowRight, X, Eye, CalendarClock,
+  User, Building2, Cog, ChevronRight, ArrowRight, X, Eye, CalendarClock, Hash,
 } from "lucide-react";
 
 const fmt = (iso) => {
@@ -32,6 +32,11 @@ export default function PartDetailModal({ part, open, onOpenChange, onUpdated, o
   const [uploading, setUploading] = useState(false);
   const [preview, setPreview] = useState(null);
   const fileRef = useRef(null);
+
+  useEffect(() => {
+    setPreview(null);
+    setNote("");
+  }, [part?.id]);
 
   if (!part) return null;
   const st = STATUS_MAP[part.status];
@@ -80,7 +85,9 @@ export default function PartDetailModal({ part, open, onOpenChange, onUpdated, o
             <DialogHeader>
               <div className="flex items-start justify-between gap-4">
                 <div>
-                  <span className="font-mono text-xs text-amber-400 font-semibold">{part.part_code}</span>
+                  <span className="font-mono text-xs text-amber-400 font-semibold">
+                    {part.order_no ? `Sip: ${part.order_no} · ` : ""}{part.part_code}
+                  </span>
                   <DialogTitle className="font-heading text-2xl mt-1">{part.part_name}</DialogTitle>
                   <div className="flex flex-wrap items-center gap-2 mt-3">
                     <Badge className={`${st.badge} font-mono text-xs`}>{st.label}</Badge>
@@ -107,6 +114,7 @@ export default function PartDetailModal({ part, open, onOpenChange, onUpdated, o
             <div className="space-y-6">
               {/* Specs */}
               <div className="grid grid-cols-2 gap-3">
+                <Spec icon={Hash} label="Sipariş No" value={part.order_no || "—"} mono />
                 <Spec icon={Boxes} label="Adet" value={`${part.quantity} adet`} />
                 <Spec icon={Layers} label="Hammadde" value={part.material_type || "—"} />
                 <Spec icon={Ruler} label="Ölçüler" value={part.material_dimensions || "—"} mono />
@@ -228,15 +236,7 @@ export default function PartDetailModal({ part, open, onOpenChange, onUpdated, o
         <div className="fixed inset-0 z-[60] bg-black/90 flex items-center justify-center p-4" data-testid="drawing-preview-overlay" onClick={() => setPreview(null)}>
           <button className="absolute top-4 right-4 text-white/80 hover:text-white p-2" onClick={() => setPreview(null)}><X className="w-7 h-7" /></button>
           <div className="max-w-5xl w-full max-h-[90vh]" onClick={(e) => e.stopPropagation()}>
-            {isCad(preview.original_filename) ? (
-              <CadViewer drawing={preview} />
-            ) : isImage(preview.content_type) ? (
-              <img src={fileUrl(preview.storage_path)} alt={preview.original_filename} className="w-full h-full object-contain max-h-[85vh] rounded" />
-            ) : isPdf(preview.content_type) ? (
-              <iframe title={preview.original_filename} src={fileUrl(preview.storage_path)} className="w-full h-[85vh] rounded bg-white" />
-            ) : (
-              <CadViewer drawing={preview} />
-            )}
+            <FilePreview drawing={preview} />
             <p className="text-center text-slate-300 font-mono text-sm mt-2">{preview.original_filename}</p>
           </div>
         </div>

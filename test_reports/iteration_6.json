@@ -1,0 +1,38 @@
+{
+  "summary": "Iteration 6 — Verified (1) BUG FIX PDF/image preview via blob (axios responseType=blob, iframe/img with blob: URL) — real PDF '00205055 Balonlu.pdf' on PRÇ-2026-058 renders inside data-testid=file-preview-pdf as blob-URL <iframe> (no 401, no blank). (2) BUG FIX stale preview — useEffect on part.id resets preview state; verified twice: after closing preview+modal on Part A and opening Part B, drawing-preview-overlay is NOT visible; even when the overlay was closed via X and modal via Escape and a new part opened, no stale overlay. (3) NEW FEATURE order_no — POST/PUT/GET /api/parts accept & persist order_no (default ''); input-order-no in form; PartCard shows 'Sip: <order_no>'; PartDetailModal header shows 'Sip: <order_no> · <part_code>' + Sipariş No spec; dashboard search-input matches order_no. (4) Excel export includes 'Sipariş No' as column A with value. (5) Regression: GET /api/files/{path} still authorizes via cookie, Bearer, and ?auth query (401 without any). All 9 pytest tests pass; all critical UI flows pass.",
+  "backend_issues": {"critical": [], "minor": []},
+  "frontend_issues": {
+    "ui_bugs": [],
+    "integration_issues": [],
+    "design_issues": [
+      {"screen": "All Dialogs (part-detail-modal, part-form-modal, alert-dialog)", "issues": ["Recurring Radix a11y warning: Missing Description/aria-describedby for DialogContent — non-blocking, flagged in iter 1, 2, 5. Add DialogDescription or aria-describedby to silence."]}
+    ]
+  },
+  "test_report_links": [
+    "/app/backend/tests/test_iteration6_order_no.py",
+    "/app/test_reports/pytest/pytest_iter6.xml"
+  ],
+  "action_items": [
+    "OPTIONAL: Add DialogDescription in PartDetailModal, PartFormModal to silence Radix a11y warnings (carried over)",
+    "OPTIONAL (pre-existing from iter5): In PartDetailModal isImage/isCad ordering — a DXF uploaded with browser MIME 'image/vnd.dxf' would render as <img> rather than CadViewer. FilePreview.jsx handles CAD-first correctly (line 14 checks isCad(original_filename) before content_type), so this issue is actually MITIGATED in the new FilePreview component. No action needed if PartDetailModal now delegates to FilePreview (it does)."
+  ],
+  "critical_code_review_comments": [
+    "FilePreview.jsx blob approach is correct: uses api axios instance (withCredentials + Bearer fallback), revokes object URL on unmount/change. Good.",
+    "PartDetailModal useEffect on [part?.id] correctly resets preview + note on part switch — bug fix 2 verified.",
+    "Backend PartCreate.order_no defaults to '' (not None) — consistent with Part model. Good serialization behavior.",
+    "Excel export uses d.get('order_no','') so parts created before the migration still export as blank Sipariş No — safe.",
+    "server.py still growing (~450 lines); recommend splitting into routers (parts, files, auth, exports) — carried over from prior iterations."
+  ],
+  "updated_files": [
+    "/app/backend/tests/test_iteration6_order_no.py",
+    "/app/test_reports/pytest/pytest_iter6.xml",
+    "/app/test_reports/iteration_6.json"
+  ],
+  "success_rate": {"backend": "100% (9/9 pytest)", "frontend": "100% for all iter6 targets (PDF blob preview, stale-preview reset, order_no on form/card/modal/search)"},
+  "test_credentials": "Authorization: Bearer seed_session_alper OR cookie session_token=seed_session_alper. User: alpergur827@gmail.com.",
+  "seed_data_creation": "Created & cleaned up: TEST_PRC_ITER6 (backend pytest fixture teardown), TEST_UI_PRC_777 (UI test — deleted via API at end), TEST_PRC_NOORDER (pytest cleanup). Also uploaded iter6.pdf via pytest fixture inside TEST_PRC_ITER6 (deleted with parent). No leftover test data.",
+  "retest_needed": false,
+  "main_agent_can_self_test": true,
+  "context_for_next_testing_agent": "Iter6 primary bug fixes (blob-based file preview + stale-preview reset + order_no field + Sipariş No excel col) fully verified end-to-end. Real PDF on PRÇ-2026-058 ('00205055 Balonlu.pdf') successfully renders as blob-URL iframe. Backend regression tests for cookie/bearer/query auth on /api/files/{path} still pass. Only outstanding cosmetic item: Radix DialogContent aria-describedby warnings (non-blocking, deferred across iterations).",
+  "rca of the issue": "Original: httpOnly cookies aren't sent on <img>/<iframe> subresource requests when app runs inside Emergent preview iframe (third-party cookie block). Fix: FilePreview.jsx fetches file via api.get(path, responseType='blob'), which uses the axios instance already sending withCredentials+Bearer successfully, then wraps in a Blob and renders via URL.createObjectURL(). No <img>/<iframe> hits the API directly — auth is done in the fetch, blob URL is same-origin. Stale-preview: useEffect on [part?.id] in PartDetailModal calls setPreview(null) whenever part switches, guaranteeing overlay is closed on modal reopen."
+}

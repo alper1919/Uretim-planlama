@@ -20,7 +20,10 @@ export default function PartCard({ part, onClick }) {
       className={`bg-[#1A2234] hover:bg-[#232D42] border rounded-lg p-4 transition-colors shadow-md group relative cursor-pointer hover:shadow-[0_0_20px_rgba(249,115,22,0.12)] ${termin?.level === "overdue" ? "border-red-500/50" : "border-[#2A364F] hover:border-amber-500/50"}`}
     >
       <div className="flex items-start justify-between gap-2 mb-2">
-        <span className="font-mono text-xs text-amber-400 font-semibold tracking-wide">{part.part_code}</span>
+        <div className="flex flex-col">
+          {part.order_no && <span className="font-mono text-[10px] text-slate-500 tracking-wide">Sip: {part.order_no}</span>}
+          <span className="font-mono text-xs text-amber-400 font-semibold tracking-wide">{part.part_code}</span>
+        </div>
         <Badge className={`${pr.badge} text-[10px] px-1.5 py-0 font-mono uppercase`}>{pr.label}</Badge>
       </div>
       <h4 className="font-heading font-semibold text-[15px] text-white leading-snug mb-3 line-clamp-2">{part.part_name}</h4>

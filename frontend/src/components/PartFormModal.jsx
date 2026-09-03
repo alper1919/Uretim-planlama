@@ -12,7 +12,7 @@ import { Loader2 } from "lucide-react";
 
 const empty = {
   part_code: "", part_name: "", quantity: 1, material_type: "", material_dimensions: "",
-  priority: "normal", workstation: "", customer: "", notes: "", due_date: "",
+  priority: "normal", workstation: "", customer: "", notes: "", due_date: "", order_no: "",
 };
 
 const MATERIALS = ["Çelik 4140 (İslahlı)", "Çelik St37", "Paslanmaz 304", "Paslanmaz 316L",
@@ -25,7 +25,7 @@ export default function PartFormModal({ open, onOpenChange, editPart, onSaved })
   useEffect(() => {
     if (open) {
       setForm(editPart ? {
-        part_code: editPart.part_code, part_name: editPart.part_name, quantity: editPart.quantity,
+        order_no: editPart.order_no || "", part_code: editPart.part_code, part_name: editPart.part_name, quantity: editPart.quantity,
         material_type: editPart.material_type, material_dimensions: editPart.material_dimensions,
         priority: editPart.priority, workstation: editPart.workstation,
         customer: editPart.customer || "", notes: editPart.notes, due_date: editPart.due_date || "",
@@ -65,6 +65,11 @@ export default function PartFormModal({ open, onOpenChange, editPart, onSaved })
           </DialogTitle>
         </DialogHeader>
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 py-2">
+          <div className="space-y-1.5">
+            <Label className="text-slate-300 text-xs uppercase tracking-wide font-mono">Sipariş No</Label>
+            <Input data-testid="input-order-no" value={form.order_no} onChange={(e) => set("order_no", e.target.value)}
+              placeholder="SIP-2026-001" className="bg-[#0B0F17] border-[#2A364F] font-mono" />
+          </div>
           <div className="space-y-1.5">
             <Label className="text-slate-300 text-xs uppercase tracking-wide font-mono">Parça Kodu *</Label>
             <Input data-testid="input-part-code" value={form.part_code} onChange={(e) => set("part_code", e.target.value)}

@@ -49,7 +49,7 @@ export default function Dashboard() {
   const filtered = useMemo(() => {
     const q = search.toLowerCase().trim();
     return parts.filter((p) => {
-      if (q && ![p.part_code, p.part_name, p.material_type, p.customer, p.workstation]
+      if (q && ![p.part_code, p.part_name, p.material_type, p.customer, p.workstation, p.order_no]
         .filter(Boolean).some((v) => v.toLowerCase().includes(q))) return false;
       if (fCustomer !== "all" && p.customer !== fCustomer) return false;
       if (fWorkstation !== "all" && p.workstation !== fWorkstation) return false;

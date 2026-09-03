@@ -121,6 +121,7 @@ class HistoryEntry(BaseModel):
 
 
 class PartCreate(BaseModel):
+    order_no: str = ""
     part_code: str
     part_name: str
     quantity: int = 1
@@ -135,6 +136,7 @@ class PartCreate(BaseModel):
 
 class Part(BaseModel):
     id: str = Field(default_factory=lambda: str(uuid.uuid4()))
+    order_no: str = ""
     part_code: str
     part_name: str
     quantity: int = 1
@@ -374,13 +376,13 @@ async def export_parts(user: User = Depends(get_current_user)):
 
     ws = wb.active
     ws.title = "Parçalar"
-    headers = ["Parça Kodu", "Parça Adı", "Adet", "Hammadde Cinsi", "Hammadde Ölçüleri",
+    headers = ["Sipariş No", "Parça Kodu", "Parça Adı", "Adet", "Hammadde Cinsi", "Hammadde Ölçüleri",
                "Aciliyet", "Durum", "Tezgah", "Müşteri", "Teslim Tarihi", "Teknik Resim",
                "Oluşturan", "Oluşturulma"]
     ws.append(headers)
     for d in docs:
         ws.append([
-            d.get("part_code", ""), d.get("part_name", ""), d.get("quantity", 0),
+            d.get("order_no", ""), d.get("part_code", ""), d.get("part_name", ""), d.get("quantity", 0),
             d.get("material_type", ""), d.get("material_dimensions", ""),
             PRIORITY_LABELS.get(d.get("priority"), d.get("priority", "")),
             STATUS_LABELS.get(d.get("status"), d.get("status", "")),
