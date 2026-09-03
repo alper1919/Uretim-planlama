@@ -1,0 +1,283 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>ParçaTakip PRO · APK'ya Dönüştürme Rehberi</title>
+<style>
+  :root{
+    --bg:#0B0F17; --surface:#131926; --card:#1A2234; --border:#2A364F;
+    --text:#F8FAFC; --muted:#94A3B8; --amber:#F59E0B; --cyan:#06B6D4; --green:#10B981; --red:#EF4444;
+  }
+  *{box-sizing:border-box}
+  body{
+    margin:0; background:var(--bg); color:var(--text);
+    font-family:'Inter',system-ui,-apple-system,'Segoe UI',Roboto,sans-serif;
+    line-height:1.6; padding:0 0 80px;
+  }
+  .wrap{max-width:880px; margin:0 auto; padding:0 20px}
+  header{
+    background:var(--surface); border-bottom:1px solid var(--border);
+    padding:28px 0; margin-bottom:32px;
+  }
+  header .wrap{display:flex; align-items:center; gap:14px}
+  .logo{width:46px;height:46px;border-radius:12px;background:var(--amber);
+    display:flex;align-items:center;justify-content:center;font-size:24px}
+  h1{font-size:26px;margin:0;font-weight:800;letter-spacing:-.5px}
+  h1 span{color:var(--amber)}
+  .sub{color:var(--muted);font-size:13px;font-family:monospace;letter-spacing:1px;text-transform:uppercase;margin-top:4px}
+  h2{margin-top:44px;font-size:22px;border-left:4px solid var(--amber);padding-left:14px}
+  h3{margin-top:28px;font-size:17px;color:var(--amber)}
+  p,li{color:#CBD5E1;font-size:15px}
+  a{color:var(--cyan)}
+  code{background:#0B0F17;border:1px solid var(--border);border-radius:5px;padding:2px 6px;font-family:'JetBrains Mono',monospace;font-size:13px;color:var(--amber)}
+  pre{
+    background:#05070c; border:1px solid var(--border); border-radius:10px;
+    padding:16px 18px; overflow-x:auto; position:relative;
+  }
+  pre code{background:none;border:none;padding:0;color:#e2e8f0;font-size:13px;line-height:1.7;display:block}
+  .badge{display:inline-block;background:var(--amber);color:#0B0F17;font-weight:700;font-size:12px;padding:3px 10px;border-radius:20px;font-family:monospace}
+  .card{background:var(--card);border:1px solid var(--border);border-radius:12px;padding:18px 20px;margin:18px 0}
+  .note{border-left:4px solid var(--cyan);background:rgba(6,182,212,.08)}
+  .warn{border-left:4px solid var(--red);background:rgba(239,68,68,.08)}
+  .ok{border-left:4px solid var(--green);background:rgba(16,185,129,.08)}
+  .step{display:flex;gap:14px;align-items:flex-start;margin:14px 0}
+  .num{flex:0 0 30px;height:30px;background:var(--amber);color:#0B0F17;border-radius:50%;
+    display:flex;align-items:center;justify-content:center;font-weight:800;font-size:14px}
+  table{width:100%;border-collapse:collapse;margin:14px 0}
+  th,td{border:1px solid var(--border);padding:10px 12px;text-align:left;font-size:14px}
+  th{background:var(--surface);color:var(--amber)}
+  .tag{font-family:monospace;font-size:12px;color:var(--green)}
+  .copy{position:absolute;top:10px;right:10px;background:var(--surface);border:1px solid var(--border);
+    color:var(--muted);border-radius:6px;padding:4px 10px;font-size:12px;cursor:pointer}
+  .copy:hover{color:#fff;border-color:var(--amber)}
+  hr{border:none;border-top:1px solid var(--border);margin:40px 0}
+  .toc a{display:block;padding:6px 0;color:#CBD5E1;text-decoration:none;border-bottom:1px solid rgba(42,54,79,.5)}
+  .toc a:hover{color:var(--amber)}
+</style>
+</head>
+<body>
+<header>
+  <div class="wrap">
+    <div class="logo">⚙️</div>
+    <div>
+      <h1>ParçaTakip<span> PRO</span> · APK Dönüştürme Rehberi</h1>
+      <div class="sub">React (CRA) → Android APK · Capacitor</div>
+    </div>
+  </div>
+</header>
+
+<div class="wrap">
+
+  <div class="card note">
+    <strong>Bu rehber ne yapar?</strong> Mevcut web uygulamanızı (React frontend) <b>Capacitor</b> ile
+    sarmalayıp Android telefonlarda kurulabilen bir <code>.apk</code> dosyasına dönüştürmenizi adım adım anlatır.
+    Backend (FastAPI) ve veritabanı (MongoDB) telefonun içinde değil, bir <b>sunucuda</b> çalışmaya devam eder;
+    APK sadece o sunucuya bağlanan arayüzdür.
+  </div>
+
+  <h2>İçindekiler</h2>
+  <div class="toc card">
+    <a href="#nasil">1. Nasıl çalışır? (Mimari)</a>
+    <a href="#onkosul">2. Ön koşullar (kurulacak programlar)</a>
+    <a href="#backend">3. Backend adresini ayarla (ÇOK ÖNEMLİ)</a>
+    <a href="#capacitor">4. Capacitor kurulumu ve yapılandırma</a>
+    <a href="#build">5. Web'i derle ve Android'e aktar</a>
+    <a href="#apk">6. APK üretme (Android Studio + komut satırı)</a>
+    <a href="#auth">7. Google Girişi (mobilde dikkat)</a>
+    <a href="#alt">8. Alternatif yöntemler (PWABuilder / WebView)</a>
+    <a href="#sorun">9. Sık karşılaşılan sorunlar</a>
+  </div>
+
+  <h2 id="nasil">1. Nasıl çalışır? (Mimari)</h2>
+  <p>APK, uygulamanızın <b>görsel arayüzünü</b> (React build çıktısı) telefonun içine gömer. Veriler ise
+  internetteki backend'inizden gelir:</p>
+  <pre><code>[ Android Telefon: APK ]
+        │  (HTTPS istekleri)
+        ▼
+[ Sunucu: FastAPI backend ]  ←→  [ MongoDB veritabanı ]
+        │
+        ▼
+[ Dosya depolama (teknik resimler) ]</code></pre>
+  <div class="card warn">
+    <strong>Kritik:</strong> APK içindeki React kodu <code>localhost</code>'a bağlanamaz. Backend'inizin
+    internetten erişilebilir bir adreste (örn. <code>https://api.sirketiniz.com</code> veya fabrika ağındaki
+    sabit bir IP) yayında olması gerekir.
+  </div>
+
+  <h2 id="onkosul">2. Ön koşullar</h2>
+  <table>
+    <tr><th>Program</th><th>Ne için</th><th>Not</th></tr>
+    <tr><td>Node.js 18+</td><td>Derleme</td><td class="tag">nodejs.org</td></tr>
+    <tr><td>Yarn</td><td>Paket yöneticisi</td><td class="tag">npm i -g yarn</td></tr>
+    <tr><td>Android Studio</td><td>APK üretimi + emülatör</td><td class="tag">developer.android.com/studio</td></tr>
+    <tr><td>JDK 17</td><td>Android derleme</td><td class="tag">Android Studio ile gelir</td></tr>
+  </table>
+  <p>Android Studio kurulumundan sonra <b>SDK Manager</b>'dan en az bir Android SDK Platform (API 33+) ve
+  <b>Android SDK Build-Tools</b> kurun.</p>
+
+  <h2 id="backend">3. Backend adresini ayarla (ÇOK ÖNEMLİ)</h2>
+  <p>APK derlemeden önce frontend'in hangi backend'e bağlanacağını sabitleyin. <code>frontend/.env</code>
+  dosyasını açıp <code>REACT_APP_BACKEND_URL</code>'i canlı sunucunuza çevirin:</p>
+  <pre><button class="copy" onclick="cp(this)">Kopyala</button><code># frontend/.env
+REACT_APP_BACKEND_URL=https://api.sirketiniz.com</code></pre>
+  <div class="card note">Fabrika içi (yerel ağ) kullanım için sunucunuzun sabit IP'sini yazabilirsiniz,
+  örn. <code>http://192.168.1.50:8001</code>. Ancak Android 9+ varsayılan olarak şifresiz (http) trafiği
+  engeller — bkz. <a href="#sorun">Bölüm 9</a> (cleartext ayarı).</div>
+
+  <h2 id="capacitor">4. Capacitor kurulumu ve yapılandırma</h2>
+  <p><code>frontend</code> klasörünün içinde şu komutları çalıştırın:</p>
+  <pre><button class="copy" onclick="cp(this)">Kopyala</button><code>cd frontend
+
+# Capacitor çekirdek + Android platformu + CLI
+yarn add @capacitor/core @capacitor/android
+yarn add -D @capacitor/cli
+
+# Capacitor'ı başlat (soruları aşağıdaki gibi yanıtlayın)
+npx cap init "ParcaTakip PRO" "com.sirketiniz.parcatakip" --web-dir=build</code></pre>
+
+  <h3>capacitor.config.json</h3>
+  <p><code>npx cap init</code> aşağıdaki dosyayı oluşturur. Kendiniz de <code>frontend/capacitor.config.json</code>
+  olarak oluşturabilirsiniz:</p>
+  <pre><button class="copy" onclick="cp(this)">Kopyala</button><code>{
+  "appId": "com.sirketiniz.parcatakip",
+  "appName": "ParcaTakip PRO",
+  "webDir": "build",
+  "server": {
+    "androidScheme": "https",
+    "cleartext": true
+  },
+  "android": {
+    "allowMixedContent": true
+  }
+}</code></pre>
+  <div class="card note"><b>appId</b> benzersiz olmalı (ters domain formatı). Google Play'e yükleyecekseniz
+  gerçek domain'inizi kullanın. <b>cleartext:true</b> yalnızca http (şifresiz) backend kullanıyorsanız gereklidir;
+  https kullanıyorsanız <code>false</code> yapıp daha güvenli olur.</div>
+
+  <h2 id="build">5. Web'i derle ve Android'e aktar</h2>
+  <pre><button class="copy" onclick="cp(this)">Kopyala</button><code>cd frontend
+
+# 1) React üretim derlemesi (build/ klasörünü üretir)
+yarn build
+
+# 2) Android platform klasörünü ekle (ilk seferde bir kez)
+npx cap add android
+
+# 3) build çıktısını Android projesine kopyala (her değişiklikte)
+npx cap sync android</code></pre>
+  <div class="card ok"><b>İpucu:</b> Frontend'de her değişiklik yaptığınızda tekrar
+  <code>yarn build &amp;&amp; npx cap sync android</code> çalıştırmanız yeterli.</div>
+
+  <h2 id="apk">6. APK üretme</h2>
+
+  <h3>A) Android Studio ile (kolay yol)</h3>
+  <div class="step"><div class="num">1</div><div>Projeyi açın: <code>npx cap open android</code></div></div>
+  <div class="step"><div class="num">2</div><div>Android Studio açılınca üst menüden <b>Build → Build Bundle(s) / APK(s) → Build APK(s)</b>.</div></div>
+  <div class="step"><div class="num">3</div><div>Derleme bitince çıkan bildirimde <b>"locate"</b> ile APK'yı bulun. Konum:
+    <code>android/app/build/outputs/apk/debug/app-debug.apk</code></div></div>
+  <div class="step"><div class="num">4</div><div>Bu <code>app-debug.apk</code> dosyasını telefona atıp kurabilirsiniz (test için yeterli).</div></div>
+
+  <h3>B) Komut satırı ile</h3>
+  <pre><button class="copy" onclick="cp(this)">Kopyala</button><code>cd frontend/android
+
+# Debug APK (imzasız, test için)
+./gradlew assembleDebug
+# Çıktı: app/build/outputs/apk/debug/app-debug.apk
+
+# Release APK (Play Store / dağıtım için imzalı)
+./gradlew assembleRelease</code></pre>
+
+  <h3>Release APK'yı imzalama (dağıtım için)</h3>
+  <p>Telefonlara resmî olarak dağıtmak veya Play Store'a yüklemek için imza anahtarı gerekir:</p>
+  <pre><button class="copy" onclick="cp(this)">Kopyala</button><code># 1) Anahtar (keystore) oluştur
+keytool -genkey -v -keystore parcatakip.keystore \
+  -alias parcatakip -keyalg RSA -keysize 2048 -validity 10000</code></pre>
+  <p>Sonra <code>android/app/build.gradle</code> içine imza yapılandırmasını ekleyin:</p>
+  <pre><button class="copy" onclick="cp(this)">Kopyala</button><code>android {
+    signingConfigs {
+        release {
+            storeFile file("../../parcatakip.keystore")
+            storePassword "PAROLANIZ"
+            keyAlias "parcatakip"
+            keyPassword "PAROLANIZ"
+        }
+    }
+    buildTypes {
+        release {
+            signingConfig signingConfigs.release
+            minifyEnabled false
+        }
+    }
+}</code></pre>
+
+  <h2 id="auth">7. Google Girişi (mobilde dikkat)</h2>
+  <div class="card warn">
+    Uygulama şu an Emergent'in yönettiği Google Auth'u kullanıyor ve giriş, tarayıcı üzerinden yönlendirme
+    (redirect) ile çalışıyor. WebView içinde Google, güvenlik nedeniyle bazı OAuth ekranlarını engelleyebilir.
+  </div>
+  <p><b>Önerilen çözümler:</b></p>
+  <ul>
+    <li><b>Capacitor Browser eklentisi</b> ile girişi sistem tarayıcısında açmak:
+      <code>yarn add @capacitor/browser</code> ve giriş linkini <code>Browser.open()</code> ile açın; dönüşte
+      derin bağlantı (deep link) ile uygulamaya geri dönün.</li>
+    <li>Ya da bağımsız barındırmaya geçerken <b>kendi Google Cloud OAuth</b> anahtarınızı kullanıp mobil için
+      resmi <b>@capacitor-community/google-auth / native Google Sign-In</b> eklentisine geçmek (en sağlıklısı).</li>
+  </ul>
+  <p>İsterseniz bu geçişi (mobil uyumlu native Google Sign-In) sizin için biz yapabiliriz.</p>
+
+  <h2 id="alt">8. Alternatif yöntemler</h2>
+  <table>
+    <tr><th>Yöntem</th><th>Avantaj</th><th>Dezavantaj</th></tr>
+    <tr><td><b>Capacitor</b> (bu rehber)</td><td>Tam kontrol, eklenti ekosistemi, Play Store uyumlu</td><td>Android Studio gerekir</td></tr>
+    <tr><td><b>PWABuilder</b> (pwabuilder.com)</td><td>Siteyi girip tek tıkla APK üretir</td><td>Sitenin PWA/manifest'i olmalı</td></tr>
+    <tr><td><b>TWA (Trusted Web Activity)</b></td><td>Gerçek siteyi gösterir, otomatik güncellenir</td><td>Sadece https canlı site ile</td></tr>
+    <tr><td><b>WebView wrapper</b></td><td>En basit</td><td>Sınırlı native özellik</td></tr>
+  </table>
+  <p><b>En hızlı yol PWABuilder:</b> Uygulamanızı önce canlıya alın (https), sonra
+  <a href="https://www.pwabuilder.com" target="_blank">pwabuilder.com</a> adresine sitenizin adresini girin,
+  "Package for Android" ile <code>.apk</code>/<code>.aab</code> indirin.</p>
+
+  <h2 id="sorun">9. Sık karşılaşılan sorunlar</h2>
+  <div class="card">
+    <p><b>Beyaz ekran açılıyor:</b> <code>REACT_APP_BACKEND_URL</code> yanlış ya da erişilemez. Doğru canlı
+    adresi yazıp tekrar <code>yarn build &amp;&amp; npx cap sync android</code> yapın.</p>
+    <p><b>"Cleartext HTTP traffic not permitted":</b> http (şifresiz) backend kullanıyorsanız
+    <code>capacitor.config.json</code> içinde <code>"cleartext": true</code> olmalı. Alternatif olarak
+    <code>android/app/src/main/AndroidManifest.xml</code> içindeki <code>&lt;application&gt;</code> etiketine
+    <code>android:usesCleartextTraffic="true"</code> ekleyin. En iyisi backend'i https yapmaktır.</p>
+    <p><b>API istekleri CORS hatası:</b> Backend'de <code>CORS_ORIGINS</code> mobil şemayı da kabul etmeli.
+    Capacitor Android şeması <code>https://localhost</code> veya <code>capacitor://localhost</code> olabilir;
+    backend'de CORS'u <code>*</code> ya da bu değerleri içerecek şekilde ayarlayın.</p>
+    <p><b>Gradle hatası:</b> Android Studio → <b>File → Sync Project with Gradle Files</b>; JDK 17 seçili olmalı.</p>
+  </div>
+
+  <hr />
+  <div class="card ok">
+    <strong>Özet komut dizisi (kopyala-yapıştır):</strong>
+    <pre><button class="copy" onclick="cp(this)">Kopyala</button><code>cd frontend
+yarn add @capacitor/core @capacitor/android
+yarn add -D @capacitor/cli
+npx cap init "ParcaTakip PRO" "com.sirketiniz.parcatakip" --web-dir=build
+yarn build
+npx cap add android
+npx cap sync android
+npx cap open android   # Android Studio'da: Build → Build APK(s)</code></pre>
+  </div>
+
+  <p style="color:var(--muted);font-size:13px;text-align:center;margin-top:40px">
+    ParçaTakip PRO · APK Dönüştürme Rehberi · Capacitor tabanlı
+  </p>
+</div>
+
+<script>
+  function cp(btn){
+    const code = btn.parentElement.querySelector('code').innerText;
+    navigator.clipboard.writeText(code).then(()=>{
+      const t = btn.innerText; btn.innerText = 'Kopyalandı ✓';
+      setTimeout(()=>btn.innerText = t, 1500);
+    });
+  }
+</script>
+</body>
+</html>
