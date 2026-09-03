@@ -329,11 +329,11 @@ async def delete_drawing(part_id: str, drawing_id: str, user: User = Depends(get
 
 
 @api_router.get("/files/{path:path}")
-async def download_file(path: str, authorization: Optional[str] = Header(None), auth: Optional[str] = Query(None)):
-    token = None
-    if authorization and authorization.startswith("Bearer "):
+async def download_file(path: str, request: Request, authorization: Optional[str] = Header(None), auth: Optional[str] = Query(None)):
+    token = request.cookies.get("session_token")
+    if not token and authorization and authorization.startswith("Bearer "):
         token = authorization.split(" ", 1)[1]
-    elif auth:
+    if not token and auth:
         token = auth
     if not token:
         raise HTTPException(status_code=401, detail="Not authenticated")

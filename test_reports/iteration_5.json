@@ -1,0 +1,38 @@
+{
+  "summary": "Iteration 5 — Verified BUG FIX for GET /api/files/{path:path} accepting httpOnly session_token cookie. Backend: 6/6 pytest passed in test_iteration5_file_auth.py — cookie-only returns 200 for image (image/png) and PDF (application/pdf, Content-Disposition inline); no-auth returns 401; invalid cookie returns 401; Bearer header still works; ?auth query still works. Frontend (with session_token cookie set): opened Fan göbeği detail modal, clicked preview- buttons — PDF drawing (test.pdf, test_iter5.pdf) rendered inside <iframe> in drawing-preview-overlay, iframe URL fetch returned 200 application/pdf; PNG drawing (test_iter5.png, a 1x1 test image) rendered in <img> with naturalWidth=1 (loaded successfully, not broken/401); 3 download anchors present in modal, all pointing to /api/files/{path}. End-to-end cookie flow works — no 401s on <img>/<iframe>/<a> subresource requests.",
+  "backend_issues": {"critical": [], "minor": []},
+  "frontend_issues": {
+    "ui_bugs": [
+      {"component": "PartDetailModal.jsx (line 231)", "issue": "CAD files with image/* MIME (e.g. mini.dxf uploaded via browser gets content_type=image/vnd.dxf) are routed to <img> instead of <CadViewer> because isImage(ct) is checked before isCad(filename). Overlay shows a broken image icon. Fix: reorder to `isCad(d.original_filename) ? <CadViewer/> : isImage(ct) ? <img/> : isPdf(ct) ? <iframe/> : <CadViewer/>`, or check isImage AND !isCad.", "selector": "[data-testid=drawing-preview-overlay] > div > img", "priority": "MEDIUM"}
+    ],
+    "integration_issues": [],
+    "design_issues": [
+      {"screen": "PartDetailModal / drawing-preview-overlay", "issues": ["Persistent Radix a11y warning: Missing Description/aria-describedby for DialogContent (also flagged in iter 1 & 2, non-blocking)"]}
+    ]
+  },
+  "test_report_links": [
+    "/app/backend/tests/test_iteration5_file_auth.py",
+    "/app/test_reports/pytest/pytest_iter5.xml"
+  ],
+  "action_items": [
+    "MEDIUM (pre-existing, uncovered by iter5 CAD test): In PartDetailModal.jsx, reorder preview routing so CAD extension check runs before isImage() check. Otherwise DXF/DWG uploads whose browser-set MIME starts with 'image/' (image/vnd.dxf, image/vnd.dwg) will incorrectly render as <img> instead of CadViewer.",
+    "OPTIONAL: Silence Radix DialogContent aria-describedby warning (still open from prior iterations)."
+  ],
+  "critical_code_review_comments": [
+    "download_file cookie fallback order (cookie -> Authorization -> ?auth query) is correct and consistent with axios withCredentials from the frontend. Good defense-in-depth.",
+    "Content-Disposition: inline is correct for browser viewing via <iframe>/<img>; if you ever want an explicit download endpoint, add a separate route or ?download=1 to switch to attachment.",
+    "server.py still ~450 lines and growing; consider splitting into routers (parts, files, exports, auth) — carried over from iter2 review."
+  ],
+  "updated_files": [
+    "/app/backend/tests/test_iteration5_file_auth.py",
+    "/app/test_reports/pytest/pytest_iter5.xml",
+    "/app/test_reports/iteration_5.json"
+  ],
+  "success_rate": {"backend": "100%", "frontend": "100% for the requested cookie-auth bug fix (image + PDF preview + download). CAD preview failure is a separate pre-existing routing bug, not the cookie fix."},
+  "test_credentials": "Authorization: Bearer seed_session_alper (also cookie name=session_token, value=seed_session_alper). User: alpergur827@gmail.com.",
+  "seed_data_creation": "Uploaded test.pdf (via curl earlier), test_iter5.png, test_iter5.pdf, mini.dxf to first part (Fan göbeği, id=c2683ad0-...). All still present. Safe to leave or main agent can delete.",
+  "retest_needed": false,
+  "main_agent_can_self_test": true,
+  "context_for_next_testing_agent": "The primary iter5 bug fix (cookie auth on /api/files/{path}) is fully verified — 6 pytest tests + UI verification via Playwright with session_token cookie in browser context. If addressing the CAD routing bug (see action_items), test file to reproduce: mini.dxf already uploaded to Fan göbeği part; content_type is 'image/vnd.dxf' which mis-triggers isImage(). Expected after fix: clicking preview-<dxf-id> renders [data-testid=cad-viewer] in the overlay instead of a broken <img>.",
+  "rca of the issue": "Requested bug: GET /api/files/{path} previously only accepted Authorization header or ?auth query; httpOnly session_token cookie was ignored. Since the app uses httpOnly cookie auth and <img>/<iframe>/<a> tags cannot inject headers, every subresource load in the modal failed with 401. Fix in server.py:333: token = request.cookies.get('session_token') is checked first, then Bearer header, then ?auth query. Verified working: browser context with cookie only → 200 for all file types with correct Content-Type; UI overlay renders <img> (image), <iframe> (PDF), and download anchors work."
+}

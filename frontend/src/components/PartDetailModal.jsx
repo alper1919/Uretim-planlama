@@ -228,7 +228,9 @@ export default function PartDetailModal({ part, open, onOpenChange, onUpdated, o
         <div className="fixed inset-0 z-[60] bg-black/90 flex items-center justify-center p-4" data-testid="drawing-preview-overlay" onClick={() => setPreview(null)}>
           <button className="absolute top-4 right-4 text-white/80 hover:text-white p-2" onClick={() => setPreview(null)}><X className="w-7 h-7" /></button>
           <div className="max-w-5xl w-full max-h-[90vh]" onClick={(e) => e.stopPropagation()}>
-            {isImage(preview.content_type) ? (
+            {isCad(preview.original_filename) ? (
+              <CadViewer drawing={preview} />
+            ) : isImage(preview.content_type) ? (
               <img src={fileUrl(preview.storage_path)} alt={preview.original_filename} className="w-full h-full object-contain max-h-[85vh] rounded" />
             ) : isPdf(preview.content_type) ? (
               <iframe title={preview.original_filename} src={fileUrl(preview.storage_path)} className="w-full h-[85vh] rounded bg-white" />
