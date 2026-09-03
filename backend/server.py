@@ -80,6 +80,19 @@ STATUSES = [
     "tesviyede", "kalite_kontrol", "sevk_alaninda", "sevk_edildi",
 ]
 
+STATUS_LABELS = {
+    "hammadde_siparis_edildi": "Hammadde Sipariş Edildi",
+    "hammadde_geldi": "Hammadde Geldi",
+    "isleme_alindi": "İşleme Alındı",
+    "uretim_bitti": "Üretim Bitti",
+    "tesviyede": "Tesviyede",
+    "kalite_kontrol": "Kalite Kontrol",
+    "sevk_alaninda": "Sevk Alanında",
+    "sevk_edildi": "Sevk Edildi",
+}
+
+PRIORITY_LABELS = {"dusuk": "Düşük", "normal": "Normal", "yuksek": "Yüksek", "acil": "Acil"}
+
 
 class User(BaseModel):
     user_id: str
@@ -117,6 +130,7 @@ class PartCreate(BaseModel):
     workstation: str = ""
     customer: str = ""
     notes: str = ""
+    due_date: Optional[str] = None
 
 
 class Part(BaseModel):
@@ -130,6 +144,7 @@ class Part(BaseModel):
     workstation: str = ""
     customer: str = ""
     notes: str = ""
+    due_date: Optional[str] = None
     status: str = "hammadde_siparis_edildi"
     drawings: List[DrawingFile] = []
     history: List[HistoryEntry] = []
@@ -336,6 +351,72 @@ async def download_file(path: str, authorization: Optional[str] = Header(None), 
     data, ct = get_object(path)
     return Response(content=data, media_type=content_type,
                     headers={"Content-Disposition": f'inline; filename="{filename}"'})
+
+
+@api_router.get("/export/parts.xlsx")
+async def export_parts(user: User = Depends(get_current_user)):
+    from openpyxl import Workbook
+    from openpyxl.styles import Font, PatternFill, Alignment
+    from io import BytesIO
+
+    def fmt_dt(iso):
+        if not iso:
+            return ""
+        try:
+            return datetime.fromisoformat(iso).strftime("%d.%m.%Y %H:%M")
+        except Exception:
+            return iso
+
+    docs = await db.parts.find({}, {"_id": 0}).sort("created_at", -1).to_list(1000)
+    wb = Workbook()
+    header_font = Font(bold=True, color="0B0F17")
+    header_fill = PatternFill("solid", fgColor="F59E0B")
+
+    ws = wb.active
+    ws.title = "Parçalar"
+    headers = ["Parça Kodu", "Parça Adı", "Adet", "Hammadde Cinsi", "Hammadde Ölçüleri",
+               "Aciliyet", "Durum", "Tezgah", "Müşteri", "Teslim Tarihi", "Teknik Resim",
+               "Oluşturan", "Oluşturulma"]
+    ws.append(headers)
+    for d in docs:
+        ws.append([
+            d.get("part_code", ""), d.get("part_name", ""), d.get("quantity", 0),
+            d.get("material_type", ""), d.get("material_dimensions", ""),
+            PRIORITY_LABELS.get(d.get("priority"), d.get("priority", "")),
+            STATUS_LABELS.get(d.get("status"), d.get("status", "")),
+            d.get("workstation", ""), d.get("customer", ""), d.get("due_date") or "",
+            len(d.get("drawings", [])), d.get("created_by", ""), fmt_dt(d.get("created_at")),
+        ])
+
+    ws2 = wb.create_sheet("Durum Geçmişi")
+    ws2.append(["Parça Kodu", "Parça Adı", "Önceki Durum", "Yeni Durum", "Not", "Kullanıcı", "Zaman"])
+    for d in docs:
+        for h in d.get("history", []):
+            ws2.append([
+                d.get("part_code", ""), d.get("part_name", ""),
+                STATUS_LABELS.get(h.get("from_status"), h.get("from_status") or "—"),
+                STATUS_LABELS.get(h.get("to_status"), h.get("to_status", "")),
+                h.get("note") or "", h.get("user_name", ""), fmt_dt(h.get("timestamp")),
+            ])
+
+    for sheet in (ws, ws2):
+        for cell in sheet[1]:
+            cell.font = header_font
+            cell.fill = header_fill
+            cell.alignment = Alignment(vertical="center")
+        for col in sheet.columns:
+            width = max((len(str(c.value)) for c in col if c.value is not None), default=10)
+            sheet.column_dimensions[col[0].column_letter].width = min(max(width + 3, 12), 45)
+
+    buf = BytesIO()
+    wb.save(buf)
+    buf.seek(0)
+    stamp = datetime.now(timezone.utc).strftime("%Y%m%d")
+    return Response(
+        content=buf.read(),
+        media_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+        headers={"Content-Disposition": f'attachment; filename="parcatakip_rapor_{stamp}.xlsx"'},
+    )
 
 
 @api_router.get("/")

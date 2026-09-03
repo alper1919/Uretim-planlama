@@ -12,7 +12,7 @@ import { Loader2 } from "lucide-react";
 
 const empty = {
   part_code: "", part_name: "", quantity: 1, material_type: "", material_dimensions: "",
-  priority: "normal", workstation: "", customer: "", notes: "",
+  priority: "normal", workstation: "", customer: "", notes: "", due_date: "",
 };
 
 const MATERIALS = ["Çelik 4140 (İslahlı)", "Çelik St37", "Paslanmaz 304", "Paslanmaz 316L",
@@ -28,7 +28,7 @@ export default function PartFormModal({ open, onOpenChange, editPart, onSaved })
         part_code: editPart.part_code, part_name: editPart.part_name, quantity: editPart.quantity,
         material_type: editPart.material_type, material_dimensions: editPart.material_dimensions,
         priority: editPart.priority, workstation: editPart.workstation,
-        customer: editPart.customer || "", notes: editPart.notes,
+        customer: editPart.customer || "", notes: editPart.notes, due_date: editPart.due_date || "",
       } : empty);
     }
   }, [open, editPart]);
@@ -42,7 +42,7 @@ export default function PartFormModal({ open, onOpenChange, editPart, onSaved })
     }
     setSaving(true);
     try {
-      const payload = { ...form, quantity: parseInt(form.quantity) || 1 };
+      const payload = { ...form, quantity: parseInt(form.quantity) || 1, due_date: form.due_date || null };
       let res;
       if (editPart) res = await api.put(`/parts/${editPart.id}`, payload);
       else res = await api.post("/parts", payload);
@@ -109,6 +109,11 @@ export default function PartFormModal({ open, onOpenChange, editPart, onSaved })
             <Label className="text-slate-300 text-xs uppercase tracking-wide font-mono">Müşteri</Label>
             <Input data-testid="input-customer" value={form.customer} onChange={(e) => set("customer", e.target.value)}
               placeholder="Firma adı" className="bg-[#0B0F17] border-[#2A364F]" />
+          </div>
+          <div className="space-y-1.5">
+            <Label className="text-slate-300 text-xs uppercase tracking-wide font-mono">Teslim Tarihi (Termin)</Label>
+            <Input data-testid="input-due-date" type="date" value={form.due_date} onChange={(e) => set("due_date", e.target.value)}
+              className="bg-[#0B0F17] border-[#2A364F] font-mono [color-scheme:dark]" />
           </div>
           <div className="space-y-1.5 sm:col-span-2">
             <Label className="text-slate-300 text-xs uppercase tracking-wide font-mono">Notlar</Label>

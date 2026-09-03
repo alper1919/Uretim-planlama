@@ -98,6 +98,12 @@ let webpackConfig = {
         ],
       };
 
+      // Fix "fully specified" ESM resolution errors (e.g. dxf-viewer)
+      webpackConfig.module.rules.push({
+        test: /\.m?js$/,
+        resolve: { fullySpecified: false },
+      });
+
       // Add health check plugin to webpack if enabled
       if (config.enableHealthCheck && healthPluginInstance) {
         webpackConfig.plugins.push(healthPluginInstance);

@@ -28,14 +28,16 @@ Atölye şefi, CNC operatörü, kalite kontrol uzmanı, sevkiyat sorumlusu, imal
 - Parça detay modalı: teknik resim önizleme (görsel/PDF), üretim hattı, durum geçmişi zaman çizelgesi
 - Endüstriyel koyu tema, ortak ağ canlı senkron göstergesi
 - 6 örnek parça seed edildi
-- Testing agent: backend 100%, frontend 100%
+- Termin takibi: parça teslim tarihi + panoda geciken/yaklaşan renkli uyarılar + "Geciken Termin" istatistiği
+- Excel rapor dışa aktarımı (Parçalar + Durum Geçmişi sayfaları, openpyxl)
+- CAD önizleme: STEP/DXF/STL/OBJ vb. tarayıcıda 3B/teknik görüntüleme; DWG için indirme fallback
+- Sürükle-bırak Kanban: kartları kolonlar arası taşıyarak durum değiştirme
+- Testing agent: iterasyon 1 & 2 backend/frontend %100
 
 ## Backlog
-- P1: Sürükle-bırak Kanban geçişleri
 - P1: Parçaya birden fazla operatör atama / bildirimler
-- P2: Excel/PDF rapor dışa aktarımı
-- P2: Tarih bazlı filtre, teslim tarihi/termin takibi
-- P2: DWG/CAD için gerçek görsel önizleme (viewer)
+- P2: Tarih bazlı filtre, gelişmiş raporlama (PDF)
+- P2: DWG için sunucu tarafı dönüştürme (gerçek DWG önizleme)
 
 ## Sonraki Görevler
 Kullanıcı geri bildirimine göre iterasyon.

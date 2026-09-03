@@ -4,11 +4,13 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Textarea } from "@/components/ui/textarea";
 import { STATUSES, STATUS_MAP, PRIORITY_MAP } from "@/lib/statuses";
+import { terminInfo, fmtDate } from "@/lib/termin";
 import { api, fileUrl } from "@/lib/api";
 import { toast } from "sonner";
+import CadViewer from "@/components/CadViewer";
 import {
   Upload, FileText, Trash2, Download, Loader2, Pencil, Boxes, Ruler, Layers,
-  User, Building2, Cog, ChevronRight, ArrowRight, X, Eye,
+  User, Building2, Cog, ChevronRight, ArrowRight, X, Eye, CalendarClock,
 } from "lucide-react";
 
 const fmt = (iso) => {
@@ -19,6 +21,10 @@ const fmt = (iso) => {
 
 const isImage = (ct) => ct?.startsWith("image/");
 const isPdf = (ct) => ct === "application/pdf";
+const CAD_EXT = ["stl", "obj", "ply", "gltf", "glb", "3ds", "fbx", "step", "stp", "off", "brep", "3mf", "dae", "wrl", "3dm", "dxf", "dwg"];
+const getExt = (name) => (name.split(".").pop() || "").toLowerCase();
+const isCad = (name) => CAD_EXT.includes(getExt(name));
+const canPreview = (d) => isImage(d.content_type) || isPdf(d.content_type) || isCad(d.original_filename);
 
 export default function PartDetailModal({ part, open, onOpenChange, onUpdated, onEdit, onDelete }) {
   const [note, setNote] = useState("");
@@ -30,6 +36,7 @@ export default function PartDetailModal({ part, open, onOpenChange, onUpdated, o
   if (!part) return null;
   const st = STATUS_MAP[part.status];
   const pr = PRIORITY_MAP[part.priority] || PRIORITY_MAP.normal;
+  const termin = terminInfo(part);
   const curIdx = STATUSES.findIndex((s) => s.key === part.status);
 
   const changeStatus = async (status) => {
@@ -78,6 +85,11 @@ export default function PartDetailModal({ part, open, onOpenChange, onUpdated, o
                   <div className="flex flex-wrap items-center gap-2 mt-3">
                     <Badge className={`${st.badge} font-mono text-xs`}>{st.label}</Badge>
                     <Badge className={`${pr.badge} font-mono text-[10px] uppercase`}>{pr.label}</Badge>
+                    {termin && termin.level !== "done" && (
+                      <Badge className={`${termin.badge} font-mono text-[10px] flex items-center gap-1`} data-testid="detail-termin-badge">
+                        <CalendarClock className="w-3 h-3" /> {termin.label}
+                      </Badge>
+                    )}
                   </div>
                 </div>
                 <div className="flex gap-2">
@@ -101,6 +113,7 @@ export default function PartDetailModal({ part, open, onOpenChange, onUpdated, o
                 <Spec icon={Cog} label="Tezgah" value={part.workstation || "—"} />
                 <Spec icon={Building2} label="Müşteri" value={part.customer || "—"} />
                 <Spec icon={User} label="Oluşturan" value={part.created_by || "—"} />
+                <Spec icon={CalendarClock} label="Teslim Tarihi" value={fmtDate(part.due_date)} mono />
               </div>
               {part.notes && (
                 <div className="bg-[#0B0F17] border border-[#2A364F] rounded-lg p-3">
@@ -136,7 +149,7 @@ export default function PartDetailModal({ part, open, onOpenChange, onUpdated, o
                         <p className="text-sm text-white truncate">{d.original_filename}</p>
                         <p className="text-[11px] text-slate-500 font-mono">{(d.size / 1024).toFixed(0)} KB</p>
                       </div>
-                      {(isImage(d.content_type) || isPdf(d.content_type)) && (
+                      {canPreview(d) && (
                         <Button size="sm" variant="ghost" onClick={() => setPreview(d)}
                           className="text-slate-400 hover:text-cyan-400 h-8 w-8 p-0" data-testid={`preview-${d.id}`}><Eye className="w-4 h-4" /></Button>
                       )}
@@ -217,8 +230,10 @@ export default function PartDetailModal({ part, open, onOpenChange, onUpdated, o
           <div className="max-w-5xl w-full max-h-[90vh]" onClick={(e) => e.stopPropagation()}>
             {isImage(preview.content_type) ? (
               <img src={fileUrl(preview.storage_path)} alt={preview.original_filename} className="w-full h-full object-contain max-h-[85vh] rounded" />
-            ) : (
+            ) : isPdf(preview.content_type) ? (
               <iframe title={preview.original_filename} src={fileUrl(preview.storage_path)} className="w-full h-[85vh] rounded bg-white" />
+            ) : (
+              <CadViewer drawing={preview} />
             )}
             <p className="text-center text-slate-300 font-mono text-sm mt-2">{preview.original_filename}</p>
           </div>

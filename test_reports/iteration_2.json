@@ -1,0 +1,37 @@
+{
+  "summary": "Iteration 2 — 3 new features (Termin/due_date, Excel export, CAD preview + DWG fallback) all pass. Backend 4/4 pytest passed (due_date persistence via POST/GET/PUT, list returns due_date, /api/export/parts.xlsx returns 200 with correct MIME + valid xlsx containing 'Parçalar' and 'Durum Geçmişi' sheets, 401 without auth). Frontend: 'Geciken Termin' stat shows 2 (matches seed); kanban cards render red '2 gün gecikti' / '9 gün gecikti' badges, orange '2 gün kaldı', slate '16 gün kaldı'; export-excel-button downloaded parcatakip_rapor_2026-09-03.xlsx (7754 bytes); Yeni Parça form input-due-date creates a part that immediately shows a termin badge on its card; detail modal shows the header detail-termin-badge and 'Teslim Tarihi' Spec; uploading a .dwg drawing exposes preview-{id} Eye button which opens the CadViewer overlay with 'Bu format tarayıcıda önizlenemiyor' unsupported message + cad-download-fallback button.",
+  "backend_issues": { "critical": [], "minor": [] },
+  "frontend_issues": {
+    "ui_bugs": [],
+    "integration_issues": [],
+    "design_issues": [
+      {"screen": "PartDetailModal / PartFormModal / drawing-preview-overlay", "issues": ["Persistent React a11y warning: Missing Description or aria-describedby for DialogContent (Radix) — same as iteration_1, non-blocking"]}
+    ]
+  },
+  "test_report_links": [
+    "/app/backend/tests/test_iteration2.py",
+    "/app/backend/tests/backend_test.py",
+    "/app/test_reports/pytest/pytest_iter2.xml"
+  ],
+  "action_items": [
+    "Optional: add DialogDescription to PartFormModal, PartDetailModal, and to the drawing-preview overlay (or aria-describedby) to silence Radix a11y warnings."
+  ],
+  "critical_code_review_comments": [
+    "server.py grew to ~450 lines and is still a single file. Export endpoint uses openpyxl synchronously inside an async handler — acceptable for MVP scale (1000 parts) but for larger datasets consider offloading to a thread (run_in_executor) to avoid blocking the event loop.",
+    "PartCreate model does not validate due_date format (any string accepted, incl. empty). Frontend already normalises empty to null. Consider Pydantic date field or regex for stricter server-side validation.",
+    "CadViewer: for 3D formats the onModelLoaded callback sets status='ready' but the code also sets status='ready' immediately after LoadModelFromFileList — for real STEP files the callback path is preferred; harmless for MVP but the immediate setStatus can hide load errors.",
+    "download_file endpoint accepts token via ?auth= query param — fine for <img>/<iframe> usage but tokens can end up in server access logs. Low priority."
+  ],
+  "updated_files": [
+    "/app/backend/tests/test_iteration2.py",
+    "/app/test_reports/pytest/pytest_iter2.xml",
+    "/app/test_reports/iteration_2.json"
+  ],
+  "success_rate": {"backend": "100%", "frontend": "100%"},
+  "test_credentials": "Authorization: Bearer seed_session_alper (also cookie session_token). User: alpergur827@gmail.com.",
+  "seed_data_creation": "One TEST_UI_TERMIN_* part created and deleted during test; no residual data.",
+  "retest_needed": false,
+  "main_agent_can_self_test": true,
+  "context_for_next_testing_agent": "Seeded 6 parts; 2 overdue (red badges), 1 orange soon, 1 slate ok. Kanban badge testid = termin-badge-{part_code}; detail header = detail-termin-badge; export button = export-excel-button; date input = input-due-date; CadViewer = cad-viewer; DWG fallback link = cad-download-fallback. To reproduce DWG fallback, upload any small file with .dwg extension via /api/parts/{id}/drawings then click Eye (preview-{drawing_id}). Excel workbook contains sheets 'Parçalar' and 'Durum Geçmişi'.",
+  "rca of the issue": "No bugs found in iteration 2 features."
+}

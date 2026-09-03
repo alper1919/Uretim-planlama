@@ -1,6 +1,7 @@
 import { STATUS_MAP, PRIORITY_MAP } from "@/lib/statuses";
+import { terminInfo } from "@/lib/termin";
 import { Badge } from "@/components/ui/badge";
-import { FileText, Boxes, Ruler, Layers, Clock } from "lucide-react";
+import { FileText, Boxes, Ruler, Layers, Clock, CalendarClock } from "lucide-react";
 
 const fmt = (iso) => {
   try {
@@ -11,11 +12,12 @@ const fmt = (iso) => {
 export default function PartCard({ part, onClick }) {
   const st = STATUS_MAP[part.status];
   const pr = PRIORITY_MAP[part.priority] || PRIORITY_MAP.normal;
+  const termin = terminInfo(part);
   return (
     <div
       data-testid={`part-card-${part.part_code}`}
       onClick={() => onClick(part)}
-      className="bg-[#1A2234] hover:bg-[#232D42] border border-[#2A364F] hover:border-amber-500/50 rounded-lg p-4 transition-colors shadow-md group relative cursor-pointer hover:shadow-[0_0_20px_rgba(249,115,22,0.12)]"
+      className={`bg-[#1A2234] hover:bg-[#232D42] border rounded-lg p-4 transition-colors shadow-md group relative cursor-pointer hover:shadow-[0_0_20px_rgba(249,115,22,0.12)] ${termin?.level === "overdue" ? "border-red-500/50" : "border-[#2A364F] hover:border-amber-500/50"}`}
     >
       <div className="flex items-start justify-between gap-2 mb-2">
         <span className="font-mono text-xs text-amber-400 font-semibold tracking-wide">{part.part_code}</span>
@@ -47,6 +49,12 @@ export default function PartCard({ part, onClick }) {
         </span>
         <span className="flex items-center gap-1"><Clock className="w-3 h-3" /> {fmt(part.updated_at)}</span>
       </div>
+
+      {termin && termin.level !== "done" && (
+        <div className={`mt-2.5 flex items-center gap-1.5 text-[11px] px-2 py-1 rounded border font-mono ${termin.badge}`} data-testid={`termin-badge-${part.part_code}`}>
+          <CalendarClock className="w-3 h-3" /> {termin.label}
+        </div>
+      )}
     </div>
   );
 }
