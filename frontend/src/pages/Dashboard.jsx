@@ -1,7 +1,7 @@
-import { useState, useEffect, useMemo } from "react";
+import { useState, useEffect, useMemo, useRef } from "react";
 import { useAuth } from "@/context/AuthContext";
 import { api } from "@/lib/api";
-import { STATUSES, STATUS_MAP } from "@/lib/statuses";
+import { STATUSES, STATUS_MAP, PRIORITIES } from "@/lib/statuses";
 import { terminInfo } from "@/lib/termin";
 import PartCard from "@/components/PartCard";
 import PartFormModal from "@/components/PartFormModal";
@@ -9,13 +9,14 @@ import PartDetailModal from "@/components/PartDetailModal";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
+import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from "@/components/ui/select";
 import {
   AlertDialog, AlertDialogContent, AlertDialogHeader, AlertDialogTitle,
   AlertDialogDescription, AlertDialogFooter, AlertDialogCancel, AlertDialogAction,
 } from "@/components/ui/alert-dialog";
 import {
   Cog, Plus, Search, LayoutGrid, Table2, Wifi, LogOut, Loader2, Package, FileText,
-  FileSpreadsheet, AlertTriangle,
+  FileSpreadsheet, AlertTriangle, Filter, X, BellRing,
 } from "lucide-react";
 import { toast } from "sonner";
 
@@ -29,6 +30,11 @@ export default function Dashboard() {
   const [editPart, setEditPart] = useState(null);
   const [detail, setDetail] = useState(null);
   const [deleteTarget, setDeleteTarget] = useState(null);
+  const [fCustomer, setFCustomer] = useState("all");
+  const [fWorkstation, setFWorkstation] = useState("all");
+  const [fPriority, setFPriority] = useState("all");
+  const [overdueOnly, setOverdueOnly] = useState(false);
+  const notifiedRef = useRef(false);
 
   const load = async () => {
     try {
@@ -42,11 +48,21 @@ export default function Dashboard() {
 
   const filtered = useMemo(() => {
     const q = search.toLowerCase().trim();
-    if (!q) return parts;
-    return parts.filter((p) =>
-      [p.part_code, p.part_name, p.material_type, p.customer, p.workstation]
-        .filter(Boolean).some((v) => v.toLowerCase().includes(q)));
-  }, [parts, search]);
+    return parts.filter((p) => {
+      if (q && ![p.part_code, p.part_name, p.material_type, p.customer, p.workstation]
+        .filter(Boolean).some((v) => v.toLowerCase().includes(q))) return false;
+      if (fCustomer !== "all" && p.customer !== fCustomer) return false;
+      if (fWorkstation !== "all" && p.workstation !== fWorkstation) return false;
+      if (fPriority !== "all" && p.priority !== fPriority) return false;
+      if (overdueOnly) { const t = terminInfo(p); if (!t || t.level !== "overdue") return false; }
+      return true;
+    });
+  }, [parts, search, fCustomer, fWorkstation, fPriority, overdueOnly]);
+
+  const customers = useMemo(() => [...new Set(parts.map((p) => p.customer).filter(Boolean))].sort(), [parts]);
+  const workstations = useMemo(() => [...new Set(parts.map((p) => p.workstation).filter(Boolean))].sort(), [parts]);
+  const filtersActive = fCustomer !== "all" || fWorkstation !== "all" || fPriority !== "all" || overdueOnly || !!search;
+  const clearFilters = () => { setFCustomer("all"); setFWorkstation("all"); setFPriority("all"); setOverdueOnly(false); setSearch(""); };
 
   const applyUpdate = (updated) => {
     setParts((prev) => prev.map((p) => (p.id === updated.id ? updated : p)));
@@ -78,10 +94,26 @@ export default function Dashboard() {
     return c;
   }, [parts]);
 
-  const overdue = useMemo(
-    () => parts.filter((p) => { const t = terminInfo(p); return t && t.level === "overdue"; }).length,
+  const overdueList = useMemo(
+    () => parts.filter((p) => { const t = terminInfo(p); return t && t.level === "overdue"; }),
     [parts]
   );
+  const overdue = overdueList.length;
+  const soonCount = useMemo(
+    () => parts.filter((p) => { const t = terminInfo(p); return t && t.level === "soon"; }).length,
+    [parts]
+  );
+
+  useEffect(() => {
+    if (loading || notifiedRef.current) return;
+    notifiedRef.current = true;
+    if (overdue > 0) {
+      toast.error(`${overdue} parçanın termini geçti!`, {
+        description: soonCount > 0 ? `${soonCount} parçanın termini de yaklaşıyor.` : "Panoda kırmızı ile işaretlendi.",
+        duration: 7000,
+      });
+    }
+  }, [loading, overdue, soonCount]);
 
   const [exporting, setExporting] = useState(false);
   const exportExcel = async () => {
@@ -184,6 +216,60 @@ export default function Dashboard() {
             </Button>
           </div>
         </div>
+
+        {/* Filter bar */}
+        <div className="flex flex-wrap items-center gap-2 mb-5" data-testid="filter-bar">
+          <span className="flex items-center gap-1.5 text-xs text-slate-500 font-mono uppercase tracking-wide">
+            <Filter className="w-3.5 h-3.5" /> Filtre
+          </span>
+          <FilterSelect testid="filter-customer" value={fCustomer} onChange={setFCustomer} placeholder="Müşteri" options={customers} />
+          <FilterSelect testid="filter-workstation" value={fWorkstation} onChange={setFWorkstation} placeholder="Tezgah" options={workstations} />
+          <Select value={fPriority} onValueChange={setFPriority}>
+            <SelectTrigger data-testid="filter-priority" className="w-40 h-9 bg-[#131926] border-[#2A364F] text-sm text-slate-200">
+              <SelectValue placeholder="Aciliyet" />
+            </SelectTrigger>
+            <SelectContent className="bg-[#131926] border-[#2A364F] text-white">
+              <SelectItem value="all">Tüm Aciliyetler</SelectItem>
+              {PRIORITIES.map((p) => <SelectItem key={p.key} value={p.key}>{p.label}</SelectItem>)}
+            </SelectContent>
+          </Select>
+          {filtersActive && (
+            <Button data-testid="clear-filters" size="sm" variant="ghost" onClick={clearFilters}
+              className="text-slate-400 hover:text-white hover:bg-[#232D42] h-9">
+              <X className="w-3.5 h-3.5 mr-1" /> Temizle
+            </Button>
+          )}
+          <span className="text-xs text-slate-500 ml-auto font-mono" data-testid="filter-result-count">
+            {filtered.length} / {parts.length} parça
+          </span>
+        </div>
+
+        {/* Overdue alert band */}
+        {overdue > 0 && (
+          <div data-testid="overdue-banner"
+            className="mb-5 rounded-xl border border-red-500/40 bg-red-950/30 p-4 flex flex-col sm:flex-row sm:items-center gap-3 sm:justify-between animate-fade-up">
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 rounded-lg bg-red-500/15 border border-red-500/40 flex items-center justify-center flex-shrink-0">
+                <BellRing className="w-5 h-5 text-red-400 animate-pulse-dot" />
+              </div>
+              <div>
+                <p className="text-white font-semibold text-sm">
+                  <span className="text-red-400 font-mono">{overdue}</span> parçanın teslim termini geçti
+                  {soonCount > 0 && <> · <span className="text-orange-400 font-mono">{soonCount}</span> parça yaklaşıyor</>}
+                </p>
+                <p className="text-slate-400 text-xs mt-0.5 font-mono">
+                  {overdueList.slice(0, 6).map((p) => p.part_code).join("  ·  ")}{overdueList.length > 6 ? "  …" : ""}
+                </p>
+              </div>
+            </div>
+            <Button data-testid="overdue-filter-toggle" size="sm" onClick={() => setOverdueOnly((v) => !v)}
+              className={overdueOnly
+                ? "bg-red-500 text-white hover:bg-red-400 font-semibold"
+                : "bg-red-500/15 text-red-300 border border-red-500/40 hover:bg-red-500/25 font-semibold"}>
+              {overdueOnly ? "Tümünü Göster" : "Sadece Gecikenler"}
+            </Button>
+          </div>
+        )}
 
         {loading ? (
           <div className="flex items-center justify-center py-24"><Loader2 className="w-8 h-8 text-amber-500 animate-spin" /></div>
@@ -294,6 +380,20 @@ function StatBig({ label, value, icon: Icon, accent }) {
       </div>
       <Icon className={`w-8 h-8 ${accent} opacity-40`} />
     </div>
+  );
+}
+
+function FilterSelect({ testid, value, onChange, placeholder, options }) {
+  return (
+    <Select value={value} onValueChange={onChange}>
+      <SelectTrigger data-testid={testid} className="w-40 h-9 bg-[#131926] border-[#2A364F] text-sm text-slate-200">
+        <SelectValue placeholder={placeholder} />
+      </SelectTrigger>
+      <SelectContent className="bg-[#131926] border-[#2A364F] text-white max-h-64">
+        <SelectItem value="all">Tüm {placeholder}</SelectItem>
+        {options.map((o) => <SelectItem key={o} value={o}>{o}</SelectItem>)}
+      </SelectContent>
+    </Select>
   );
 }
 

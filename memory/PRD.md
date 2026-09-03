@@ -32,6 +32,8 @@ Atölye şefi, CNC operatörü, kalite kontrol uzmanı, sevkiyat sorumlusu, imal
 - Excel rapor dışa aktarımı (Parçalar + Durum Geçmişi sayfaları, openpyxl)
 - CAD önizleme: STEP/DXF/STL/OBJ vb. tarayıcıda 3B/teknik görüntüleme; DWG için indirme fallback
 - Sürükle-bırak Kanban: kartları kolonlar arası taşıyarak durum değiştirme
+- Gecikme bildirimi: giriş anında toast + kırmızı uyarı bandı, "Sadece Gecikenler" filtresi
+- Hızlı filtre çubuğu: müşteri / tezgah / aciliyet süzme + sonuç sayacı + temizle
 - Testing agent: iterasyon 1 & 2 backend/frontend %100
 
 ## Backlog
