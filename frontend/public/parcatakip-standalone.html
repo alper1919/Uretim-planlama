@@ -1,0 +1,502 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>ParçaTakip PRO · Üretim & İmalat Takip Sistemi</title>
+<style>
+  :root{
+    --bg:#0B0F17; --surface:#131926; --card:#1A2234; --cardh:#232D42; --border:#2A364F;
+    --text:#F8FAFC; --muted:#94A3B8; --amber:#F59E0B; --red:#EF4444;
+  }
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--bg);color:var(--text);font-family:'Inter',system-ui,-apple-system,'Segoe UI',Roboto,sans-serif;line-height:1.5}
+  .mono{font-family:'JetBrains Mono',ui-monospace,monospace}
+  .heading{font-family:'Outfit','Inter',sans-serif;font-weight:800;letter-spacing:-.4px}
+  ::-webkit-scrollbar{height:10px;width:10px}::-webkit-scrollbar-track{background:#0B0F17}
+  ::-webkit-scrollbar-thumb{background:#2A364F;border-radius:6px}
+  ::selection{background:rgba(245,158,11,.3)}
+  header{position:sticky;top:0;z-index:30;background:rgba(11,15,23,.9);backdrop-filter:blur(14px);border-bottom:1px solid var(--border)}
+  .wrap{max-width:1500px;margin:0 auto;padding:0 24px}
+  .hrow{display:flex;align-items:center;justify-content:space-between;gap:16px;padding:14px 0}
+  .logo{width:42px;height:42px;border-radius:11px;background:var(--amber);display:flex;align-items:center;justify-content:center}
+  .brand{font-size:19px}.brand span{color:var(--amber)}
+  .net{display:flex;align-items:center;gap:6px;font-size:11px;color:#34D399;margin-top:2px}
+  .dot{width:7px;height:7px;border-radius:50%;background:#34D399;animation:pulse 1.6s infinite}
+  @keyframes pulse{50%{opacity:.3}}
+  main{padding:24px 0 80px}
+  .stats{display:grid;grid-template-columns:repeat(4,1fr);gap:16px;margin-bottom:24px}
+  .stat{background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:16px;display:flex;justify-content:space-between;align-items:center}
+  .stat .lbl{font-size:11px;text-transform:uppercase;letter-spacing:.5px;color:#64748B}
+  .stat .val{font-size:30px;font-weight:800;margin-top:4px;font-family:'Outfit',sans-serif}
+  .toolbar{display:flex;flex-wrap:wrap;align-items:center;gap:10px;margin-bottom:14px}
+  input,select,textarea{background:#0B0F17;border:1px solid var(--border);color:var(--text);border-radius:9px;padding:9px 12px;font-size:14px;font-family:inherit;outline:none}
+  input:focus,select:focus,textarea:focus{border-color:var(--amber)}
+  .search{flex:1;min-width:220px;max-width:420px}
+  .btn{cursor:pointer;border:none;border-radius:9px;padding:9px 15px;font-size:14px;font-weight:600;display:inline-flex;align-items:center;gap:6px;transition:background .15s,color .15s,border-color .15s;font-family:inherit}
+  .btn-amber{background:var(--amber);color:#0B0F17}.btn-amber:hover{background:#fbbf24}
+  .btn-ghost{background:transparent;color:var(--muted)}.btn-ghost:hover{background:var(--cardh);color:#fff}
+  .btn-out{background:var(--surface);border:1px solid var(--border);color:#e2e8f0}.btn-out:hover{background:var(--cardh)}
+  .seg{display:flex;background:var(--surface);border:1px solid var(--border);border-radius:9px;padding:4px}
+  .seg button{background:none;border:none;color:var(--muted);padding:6px 13px;border-radius:6px;cursor:pointer;font-size:14px;font-weight:600;font-family:inherit}
+  .seg button.active{background:var(--amber);color:#0B0F17}
+  .filterbar{display:flex;flex-wrap:wrap;align-items:center;gap:8px;margin-bottom:18px;font-size:13px;color:#64748B}
+  .filterbar select{padding:7px 10px}
+  .rescount{margin-left:auto;font-family:'JetBrains Mono',monospace;color:#64748B}
+  .banner{margin-bottom:18px;border:1px solid rgba(239,68,68,.4);background:rgba(239,68,68,.09);border-radius:12px;padding:16px;display:flex;align-items:center;justify-content:space-between;gap:12px}
+  .banner .ic{width:40px;height:40px;border-radius:10px;background:rgba(239,68,68,.15);border:1px solid rgba(239,68,68,.4);display:flex;align-items:center;justify-content:center}
+  .board{display:flex;gap:16px;overflow-x:auto;padding-bottom:20px}
+  .col{width:310px;flex:0 0 310px;background:var(--surface);border:1px solid var(--border);border-top-width:2px;border-radius:12px;display:flex;flex-direction:column}
+  .col.dragover{border-color:var(--amber);box-shadow:0 0 0 2px rgba(245,158,11,.35)}
+  .colhead{display:flex;align-items:center;justify-content:space-between;padding:12px 15px;border-bottom:1px solid var(--border)}
+  .colhead .t{display:flex;align-items:center;gap:8px;font-size:14px;font-weight:600}
+  .cnt{font-family:'JetBrains Mono',monospace;font-size:12px;padding:2px 9px;border-radius:20px}
+  .colbody{padding:12px;display:flex;flex-direction:column;gap:12px;min-height:120px}
+  .pcard{background:var(--card);border:1px solid var(--border);border-radius:10px;padding:14px;cursor:pointer;transition:background .15s,border-color .15s}
+  .pcard:hover{background:var(--cardh);border-color:rgba(245,158,11,.5)}
+  .pcard.overdue{border-color:rgba(239,68,68,.5)}
+  .pcard.dragging{opacity:.4}
+  .pc-top{display:flex;justify-content:space-between;gap:8px;margin-bottom:6px}
+  .code{font-family:'JetBrains Mono',monospace;font-size:12px;color:var(--amber);font-weight:600}
+  .sipno{font-family:'JetBrains Mono',monospace;font-size:10px;color:#64748B}
+  .pc-name{font-family:'Outfit',sans-serif;font-weight:600;font-size:15px;margin:2px 0 10px}
+  .chips{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:10px}
+  .chip{font-family:'JetBrains Mono',monospace;font-size:11px;padding:2px 8px;border-radius:5px;border:1px solid #334155;background:#1e293b;color:#cbd5e1;display:inline-flex;align-items:center;gap:4px}
+  .chip.dim{background:rgba(120,53,15,.35);border-color:rgba(146,64,14,.5);color:#fcd34d}
+  .badge{font-family:'JetBrains Mono',monospace;font-size:10px;padding:2px 8px;border-radius:5px;border:1px solid;text-transform:uppercase}
+  .pc-foot{display:flex;justify-content:space-between;font-size:11px;color:#64748B}
+  .termin{margin-top:10px;font-family:'JetBrains Mono',monospace;font-size:11px;padding:4px 8px;border-radius:6px;border:1px solid;display:flex;align-items:center;gap:6px}
+  table{width:100%;border-collapse:collapse}
+  th,td{text-align:left;padding:11px 14px;font-size:14px;border-bottom:1px solid rgba(42,54,79,.6)}
+  th{font-family:'JetBrains Mono',monospace;font-size:11px;text-transform:uppercase;color:var(--amber);border-bottom:1px solid var(--border)}
+  tbody tr{cursor:pointer}tbody tr:hover{background:var(--card)}
+  .tablewrap{background:var(--surface);border:1px solid var(--border);border-radius:12px;overflow:auto}
+  .overlay{position:fixed;inset:0;background:rgba(0,0,0,.7);backdrop-filter:blur(4px);z-index:50;display:flex;align-items:flex-start;justify-content:center;padding:24px;overflow:auto}
+  .modal{background:var(--surface);border:1px solid var(--border);border-radius:16px;width:100%;max-width:840px;margin:auto}
+  .modal.sm{max-width:460px}
+  .mhead{padding:20px 24px;border-bottom:1px solid var(--border);display:flex;justify-content:space-between;align-items:flex-start;gap:12px}
+  .mbody{padding:22px 24px}
+  .grid2{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+  .fld{display:flex;flex-direction:column;gap:5px}
+  .fld label{font-family:'JetBrains Mono',monospace;font-size:11px;text-transform:uppercase;color:#94A3B8}
+  .fld input,.fld select,.fld textarea{width:100%}
+  .mfoot{padding:16px 24px;border-top:1px solid var(--border);display:flex;justify-content:flex-end;gap:10px}
+  .spec{background:#0B0F17;border:1px solid var(--border);border-radius:9px;padding:11px}
+  .spec .k{font-family:'JetBrains Mono',monospace;font-size:10px;text-transform:uppercase;color:#64748B}
+  .spec .v{font-size:14px;margin-top:3px}
+  .pipe{display:flex;flex-direction:column;gap:6px}
+  .step{display:flex;align-items:center;gap:10px;padding:9px 12px;border:1px solid var(--border);background:#0B0F17;border-radius:9px;cursor:pointer;font-size:14px;transition:border-color .15s,background .15s}
+  .step:hover{border-color:rgba(245,158,11,.4);background:var(--card)}
+  .step.active{background:var(--cardh);border-color:rgba(245,158,11,.5);font-weight:600}
+  .step .sd{width:10px;height:10px;border-radius:50%}
+  .draw{display:flex;align-items:center;gap:10px;background:#0B0F17;border:1px solid var(--border);border-radius:9px;padding:9px}
+  .draw .fi{width:38px;height:38px;border-radius:7px;background:rgba(8,145,178,.2);border:1px solid rgba(6,182,212,.3);display:flex;align-items:center;justify-content:center;color:#22d3ee}
+  .hist{display:flex;gap:10px}
+  .hist .line{display:flex;flex-direction:column;align-items:center}
+  .hist .hd{width:10px;height:10px;border-radius:50%;margin-top:4px}
+  .hist .bar{flex:1;width:1px;background:var(--border);margin-top:4px}
+  .iconbtn{background:none;border:none;color:#94A3B8;cursor:pointer;padding:6px;border-radius:7px;display:inline-flex}
+  .iconbtn:hover{background:var(--cardh);color:#fff}
+  .pvwrap{position:fixed;inset:0;background:rgba(0,0,0,.9);z-index:60;display:flex;align-items:center;justify-content:center;padding:20px}
+  svg{width:1em;height:1em;stroke:currentColor;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+  .empty{text-align:center;padding:90px 20px;color:#64748B}
+  .namebox{display:flex;align-items:center;gap:8px}
+  .avatar{width:32px;height:32px;border-radius:50%;background:var(--amber);color:#0B0F17;display:flex;align-items:center;justify-content:center;font-weight:800;font-size:13px}
+  @media(max-width:720px){.stats{grid-template-columns:repeat(2,1fr)}.grid2{grid-template-columns:1fr}.hrow .net{display:none}}
+</style>
+</head>
+<body>
+<header><div class="wrap hrow">
+  <div style="display:flex;align-items:center;gap:12px">
+    <div class="logo"><svg style="width:24px;height:24px;color:#0B0F17"><use href="#i-cog"/></svg></div>
+    <div>
+      <div class="brand heading">ParçaTakip<span> PRO</span></div>
+      <div class="net"><svg style="width:12px;height:12px"><use href="#i-wifi"/></svg><span class="dot"></span> Ortak Ağ · Yerel Kayıt</div>
+    </div>
+  </div>
+  <div class="namebox">
+    <div class="avatar" id="avatar">K</div>
+    <input id="username" style="width:150px" placeholder="Adınız" title="Durum geçmişinde kullanılır" />
+  </div>
+</div></header>
+
+<main class="wrap">
+  <div class="stats" id="stats"></div>
+
+  <div class="toolbar">
+    <input id="search" class="search" placeholder="Sipariş no, parça kodu, ad, hammadde, müşteri…" oninput="state.search=this.value;render()" />
+    <div class="seg">
+      <button id="seg-kanban" class="active" onclick="setView('kanban')">Pano</button>
+      <button id="seg-table" onclick="setView('table')">Liste</button>
+    </div>
+    <button class="btn btn-out" onclick="exportCSV()"><svg><use href="#i-sheet"/></svg> Rapor (CSV)</button>
+    <button class="btn btn-amber" onclick="openForm()"><svg><use href="#i-plus"/></svg> Yeni Parça</button>
+  </div>
+
+  <div class="filterbar">
+    <span style="display:inline-flex;align-items:center;gap:6px"><svg><use href="#i-filter"/></svg> FİLTRE</span>
+    <select id="f-customer" onchange="state.fCustomer=this.value;render()"></select>
+    <select id="f-workstation" onchange="state.fWorkstation=this.value;render()"></select>
+    <select id="f-priority" onchange="state.fPriority=this.value;render()">
+      <option value="all">Tüm Aciliyetler</option>
+    </select>
+    <button id="clearf" class="btn btn-ghost" style="display:none" onclick="clearFilters()"><svg><use href="#i-x"/></svg> Temizle</button>
+    <span class="rescount" id="rescount"></span>
+  </div>
+
+  <div id="banner"></div>
+  <div id="content"></div>
+</main>
+
+<div id="modalRoot"></div>
+<div id="previewRoot"></div>
+
+<!-- SVG icon sprite -->
+<svg width="0" height="0" style="position:absolute">
+  <defs>
+    <g id="i-cog"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></g>
+    <g id="i-wifi"><path d="M5 12.55a11 11 0 0 1 14.08 0M1.42 9a16 16 0 0 1 21.16 0M8.53 16.11a6 6 0 0 1 6.95 0"/><line x1="12" y1="20" x2="12" y2="20"/></g>
+    <g id="i-plus"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></g>
+    <g id="i-x"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></g>
+    <g id="i-sheet"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6"/><path d="M8 13h8M8 17h8"/></g>
+    <g id="i-filter"><polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3"/></g>
+    <g id="i-upload"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></g>
+    <g id="i-dl"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></g>
+    <g id="i-eye"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></g>
+    <g id="i-trash"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></g>
+    <g id="i-edit"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></g>
+    <g id="i-file"><path d="M13 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V9z"/><polyline points="13 2 13 9 20 9"/></g>
+    <g id="i-bell"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></g>
+    <g id="i-alert"><path d="M10.29 3.86 1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12" y2="17"/></g>
+    <g id="i-clock"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></g>
+  </defs>
+</svg>
+
+<script>
+const STATUSES=[
+ {k:"hammadde_siparis_edildi",l:"Hammadde Sipariş Edildi",c:"#F59E0B"},
+ {k:"hammadde_geldi",l:"Hammadde Geldi",c:"#3B82F6"},
+ {k:"isleme_alindi",l:"İşleme Alındı",c:"#EA580C"},
+ {k:"uretim_bitti",l:"Üretim Bitti",c:"#6366F1"},
+ {k:"tesviyede",l:"Tesviyede",c:"#A855F7"},
+ {k:"kalite_kontrol",l:"Kalite Kontrol",c:"#06B6D4"},
+ {k:"sevk_alaninda",l:"Sevk Alanında",c:"#14B8A6"},
+ {k:"sevk_edildi",l:"Sevk Edildi",c:"#10B981"},
+];
+const SMAP=Object.fromEntries(STATUSES.map(s=>[s.k,s]));
+const PRIOS=[{k:"dusuk",l:"Düşük",c:"#94A3B8"},{k:"normal",l:"Normal",c:"#3B82F6"},{k:"yuksek",l:"Yüksek",c:"#F97316"},{k:"acil",l:"Acil",c:"#EF4444"}];
+const PMAP=Object.fromEntries(PRIOS.map(p=>[p.k,p]));
+const MATERIALS=["Çelik 4140 (İslahlı)","Çelik St37","Paslanmaz 304","Paslanmaz 316L","Alüminyum 7075","Alüminyum 6061","Kestamid","Bronz","Döküm GG25","Pirinç"];
+const KEY="parcatakip_parts_v1";
+const UKEY="parcatakip_user_v1";
+
+const uid=()=>Math.random().toString(36).slice(2,12);
+const nowIso=()=>new Date().toISOString();
+const esc=(s)=>(s==null?"":String(s)).replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+
+let state={parts:[],view:"kanban",search:"",fCustomer:"all",fWorkstation:"all",fPriority:"all",overdueOnly:false,editId:null,detailId:null,dragId:null,preview:null};
+
+function getUser(){return localStorage.getItem(UKEY)||"Kullanıcı"}
+function setUser(n){localStorage.setItem(UKEY,n||"Kullanıcı");document.getElementById("avatar").textContent=(n||"K").trim().charAt(0).toUpperCase()}
+
+function load(){
+  try{const raw=localStorage.getItem(KEY);if(raw){state.parts=JSON.parse(raw);return}}catch(e){}
+  seed();save();
+}
+function save(){localStorage.setItem(KEY,JSON.stringify(state.parts))}
+
+function seed(){
+  const mk=(o)=>({id:uid(),order_no:"",part_code:"",part_name:"",quantity:1,material_type:"",material_dimensions:"",priority:"normal",workstation:"",customer:"",notes:"",due_date:"",status:"hammadde_siparis_edildi",drawings:[],history:[],created_by:"Sistem",created_at:nowIso(),updated_at:nowIso(),...o});
+  const d=(off)=>{const x=new Date();x.setDate(x.getDate()+off);return x.toISOString().slice(0,10)};
+  const seeds=[
+   mk({order_no:"SIP-2026-001",part_code:"PRÇ-2026-042",part_name:"Redüktör Mil Flanşı",quantity:150,material_type:"Çelik 4140 (İslahlı)",material_dimensions:"Ø120x350 mm",priority:"yuksek",workstation:"CNC Torna 1",customer:"Demir Makine A.Ş.",due_date:d(2),status:"hammadde_geldi",notes:"Toleranslar H7."}),
+   mk({order_no:"SIP-2026-002",part_code:"PRÇ-2026-058",part_name:"Hidrolik Piston Gövdesi",quantity:40,material_type:"Paslanmaz 316L",material_dimensions:"Ø80x420 mm",priority:"acil",workstation:"CNC Torna 2",customer:"Hidsan Ltd.",due_date:d(-3),status:"hammadde_siparis_edildi"}),
+   mk({order_no:"SIP-2026-003",part_code:"PRÇ-2026-061",part_name:"Dişli Kutusu Kapağı",quantity:75,material_type:"Döküm GG25",material_dimensions:"320x320x60 mm",priority:"normal",workstation:"İşleme Merkezi 3",customer:"Öztürk Otomotiv",due_date:d(16),status:"tesviyede"}),
+   mk({order_no:"SIP-2026-004",part_code:"PRÇ-2026-066",part_name:"Bağlantı Aparatı",quantity:500,material_type:"Alüminyum 6061",material_dimensions:"40x40x120 mm",priority:"normal",workstation:"İşleme Merkezi 1",customer:"AKS Endüstri",due_date:d(-9),status:"kalite_kontrol"}),
+   mk({order_no:"SIP-2026-005",part_code:"PRÇ-2026-070",part_name:"Rulman Yatağı",quantity:220,material_type:"Çelik St37",material_dimensions:"Ø150x90 mm",priority:"dusuk",workstation:"CNC Torna 1",customer:"Demir Makine A.Ş.",status:"sevk_edildi"}),
+   mk({order_no:"SIP-2026-006",part_code:"PRÇ-2026-073",part_name:"Kestamid Burç",quantity:1000,material_type:"Kestamid",material_dimensions:"Ø60x50 mm",priority:"normal",workstation:"CNC Torna 3",customer:"Politeknik",due_date:d(1),status:"isleme_alindi"}),
+  ];
+  seeds.forEach(p=>{p.history=[{id:uid(),from:null,to:p.status,note:"Parça oluşturuldu",user:"Sistem",ts:nowIso()}]});
+  state.parts=seeds;
+}
+
+function terminInfo(p){
+  if(!p.due_date)return null;
+  const due=new Date(p.due_date+"T23:59:59"),now=new Date();
+  const days=Math.ceil((due-now)/86400000);
+  if(p.status==="sevk_edildi")return{level:"done"};
+  if(days<0)return{level:"overdue",label:Math.abs(days)+" gün gecikti",bd:"rgba(239,68,68,.4)",bg:"rgba(239,68,68,.12)",fg:"#f87171",dot:"#ef4444"};
+  if(days<=3)return{level:"soon",label:days===0?"Bugün son gün":days+" gün kaldı",bd:"rgba(249,115,22,.4)",bg:"rgba(249,115,22,.12)",fg:"#fb923c",dot:"#fb923c"};
+  return{level:"ok",label:days+" gün kaldı",bd:"rgba(100,116,139,.4)",bg:"rgba(100,116,139,.15)",fg:"#cbd5e1",dot:"#94a3b8"};
+}
+const fmtDate=(iso)=>{if(!iso)return "—";try{return new Date(iso).toLocaleDateString("tr-TR",{day:"2-digit",month:"short",year:"numeric"})}catch(e){return iso}};
+const fmtDT=(iso)=>{try{return new Date(iso).toLocaleString("tr-TR",{day:"2-digit",month:"short",hour:"2-digit",minute:"2-digit"})}catch(e){return ""}};
+
+function badge(colorK,text,statusColor){
+  const c=statusColor;
+  return `<span class="badge" style="color:${c};border-color:${c}55;background:${c}1a">${esc(text)}</span>`;
+}
+
+function setView(v){state.view=v;document.getElementById("seg-kanban").classList.toggle("active",v==="kanban");document.getElementById("seg-table").classList.toggle("active",v==="table");render()}
+
+function filtered(){
+  const q=state.search.toLowerCase().trim();
+  return state.parts.filter(p=>{
+    if(q && ![p.part_code,p.part_name,p.material_type,p.customer,p.workstation,p.order_no].filter(Boolean).some(v=>v.toLowerCase().includes(q)))return false;
+    if(state.fCustomer!=="all"&&p.customer!==state.fCustomer)return false;
+    if(state.fWorkstation!=="all"&&p.workstation!==state.fWorkstation)return false;
+    if(state.fPriority!=="all"&&p.priority!==state.fPriority)return false;
+    if(state.overdueOnly){const t=terminInfo(p);if(!t||t.level!=="overdue")return false}
+    return true;
+  });
+}
+function clearFilters(){state.fCustomer="all";state.fWorkstation="all";state.fPriority="all";state.overdueOnly=false;state.search="";document.getElementById("search").value="";syncFilterSelects();render()}
+
+function uniq(key){return [...new Set(state.parts.map(p=>p[key]).filter(Boolean))].sort()}
+function fillSelect(id,label,vals){
+  const el=document.getElementById(id);const cur=el.value||"all";
+  el.innerHTML=`<option value="all">Tüm ${label}</option>`+vals.map(v=>`<option value="${esc(v)}">${esc(v)}</option>`).join("");
+  el.value=[...el.options].some(o=>o.value===cur)?cur:"all";
+}
+function syncFilterSelects(){
+  fillSelect("f-customer","Müşteri",uniq("customer"));
+  fillSelect("f-workstation","Tezgah",uniq("workstation"));
+  document.getElementById("f-customer").value=state.fCustomer;
+  document.getElementById("f-workstation").value=state.fWorkstation;
+  document.getElementById("f-priority").value=state.fPriority;
+}
+
+function render(){
+  syncFilterSelects();
+  const fl=filtered();
+  // stats
+  const inProd=state.parts.filter(p=>["isleme_alindi","tesviyede"].includes(p.status)).length;
+  const overdueList=state.parts.filter(p=>{const t=terminInfo(p);return t&&t.level==="overdue"});
+  const shipped=state.parts.filter(p=>p.status==="sevk_edildi").length;
+  document.getElementById("stats").innerHTML=[
+   ["Toplam Parça",state.parts.length,"#F59E0B"],
+   ["Üretimde",inProd,"#F97316"],
+   ["Geciken Termin",overdueList.length,overdueList.length?"#EF4444":"#94A3B8"],
+   ["Sevk Edildi",shipped,"#10B981"],
+  ].map(([l,v,c])=>`<div class="stat"><div><div class="lbl">${l}</div><div class="val" style="color:${c}">${v}</div></div></div>`).join("");
+
+  document.getElementById("clearf").style.display=(state.fCustomer!=="all"||state.fWorkstation!=="all"||state.fPriority!=="all"||state.overdueOnly||state.search)?"inline-flex":"none";
+  document.getElementById("rescount").textContent=`${fl.length} / ${state.parts.length} parça`;
+
+  // banner
+  const soon=state.parts.filter(p=>{const t=terminInfo(p);return t&&t.level==="soon"}).length;
+  document.getElementById("banner").innerHTML= overdueList.length? `
+    <div class="banner">
+      <div style="display:flex;align-items:center;gap:12px">
+        <div class="ic" style="color:#f87171"><svg style="width:20px;height:20px"><use href="#i-bell"/></svg></div>
+        <div>
+          <div style="font-weight:600"><span style="color:#f87171" class="mono">${overdueList.length}</span> parçanın teslim termini geçti${soon?` · <span style="color:#fb923c" class="mono">${soon}</span> parça yaklaşıyor`:""}</div>
+          <div class="mono" style="font-size:12px;color:#64748B;margin-top:2px">${overdueList.slice(0,6).map(p=>esc(p.part_code)).join("  ·  ")}${overdueList.length>6?"  …":""}</div>
+        </div>
+      </div>
+      <button class="btn ${state.overdueOnly?'btn-amber':'btn-out'}" style="${state.overdueOnly?'background:#ef4444;color:#fff':'color:#fca5a5;border-color:rgba(239,68,68,.4);background:rgba(239,68,68,.12)'}" onclick="state.overdueOnly=!state.overdueOnly;render()">${state.overdueOnly?"Tümünü Göster":"Sadece Gecikenler"}</button>
+    </div>`:"";
+
+  document.getElementById("content").innerHTML = state.parts.length===0
+    ? `<div class="empty"><h3 class="heading" style="color:#fff">Henüz parça yok</h3><p>İlk parçanı ekleyerek başla.</p><button class="btn btn-amber" onclick="openForm()">+ Yeni Parça</button></div>`
+    : (state.view==="kanban"?renderKanban(fl):renderTable(fl));
+}
+
+function cardHTML(p){
+  const st=SMAP[p.status],pr=PMAP[p.priority]||PMAP.normal,t=terminInfo(p);
+  return `<div class="pcard ${t&&t.level==="overdue"?"overdue":""}" draggable="true" data-id="${p.id}"
+     ondragstart="onDragStart(event,'${p.id}')" ondragend="onDragEnd()" onclick="openDetail('${p.id}')">
+    <div class="pc-top">
+      <div>${p.order_no?`<div class="sipno">Sip: ${esc(p.order_no)}</div>`:""}<div class="code">${esc(p.part_code)}</div></div>
+      ${badge(0,pr.l,pr.c)}
+    </div>
+    <div class="pc-name">${esc(p.part_name)}</div>
+    <div class="chips">
+      <span class="chip">${p.quantity} ad</span>
+      ${p.material_type?`<span class="chip">${esc(p.material_type)}</span>`:""}
+      ${p.material_dimensions?`<span class="chip dim">${esc(p.material_dimensions)}</span>`:""}
+    </div>
+    <div class="pc-foot">
+      <span>${p.drawings.length?`<span style="color:#22d3ee">▣ ${p.drawings.length}</span>`:""}</span>
+      <span>${fmtDT(p.updated_at)}</span>
+    </div>
+    ${t&&t.level!=="done"?`<div class="termin" style="border-color:${t.bd};background:${t.bg};color:${t.fg}">⏱ ${t.label}</div>`:""}
+  </div>`;
+}
+function renderKanban(fl){
+  return `<div class="board" id="board">`+STATUSES.map(s=>{
+    const items=fl.filter(p=>p.status===s.k);
+    return `<div class="col" style="border-top-color:${s.c}" data-status="${s.k}"
+       ondragover="onDragOver(event,'${s.k}')" ondragleave="onDragLeave(event,'${s.k}')" ondrop="onDrop(event,'${s.k}')">
+      <div class="colhead"><div class="t"><span class="sd" style="width:9px;height:9px;border-radius:50%;background:${s.c}"></span>${s.l}</div>
+        <span class="cnt" style="color:${s.c};background:${s.c}1a">${items.length}</span></div>
+      <div class="colbody">${items.map(cardHTML).join("")||`<p style="text-align:center;color:#475569;font-size:12px;padding:20px 0">Boş</p>`}</div>
+    </div>`;
+  }).join("")+`</div>`;
+}
+function renderTable(fl){
+  return `<div class="tablewrap"><table><thead><tr>
+    <th>Sipariş No</th><th>Parça Kodu</th><th>Ad</th><th>Adet</th><th>Hammadde</th><th>Ölçüler</th><th>Durum</th><th>Resim</th></tr></thead><tbody>`+
+    fl.map(p=>{const st=SMAP[p.status];return `<tr onclick="openDetail('${p.id}')">
+      <td class="mono" style="color:#64748B">${esc(p.order_no||"—")}</td>
+      <td class="mono" style="color:#F59E0B">${esc(p.part_code)}</td>
+      <td>${esc(p.part_name)}</td><td class="mono">${p.quantity}</td>
+      <td>${esc(p.material_type||"—")}</td><td class="mono">${esc(p.material_dimensions||"—")}</td>
+      <td>${badge(0,st.l,st.c)}</td>
+      <td>${p.drawings.length?`<span style="color:#22d3ee" class="mono">▣ ${p.drawings.length}</span>`:'<span style="color:#475569">—</span>'}</td></tr>`}).join("")+
+    `</tbody></table>${fl.length===0?'<p style="text-align:center;color:#64748B;padding:30px">Sonuç bulunamadı</p>':""}</div>`;
+}
+
+// Drag & drop
+function onDragStart(e,id){state.dragId=id;e.dataTransfer.effectAllowed="move";const el=document.querySelector(`.pcard[data-id="${id}"]`);if(el)el.classList.add("dragging")}
+function onDragEnd(){state.dragId=null;document.querySelectorAll(".col").forEach(c=>c.classList.remove("dragover"));document.querySelectorAll(".pcard").forEach(c=>c.classList.remove("dragging"))}
+function onDragOver(e,k){e.preventDefault();const c=document.querySelector(`.col[data-status="${k}"]`);if(c)c.classList.add("dragover")}
+function onDragLeave(e,k){const c=document.querySelector(`.col[data-status="${k}"]`);if(c)c.classList.remove("dragover")}
+function onDrop(e,k){e.preventDefault();if(state.dragId)moveStatus(state.dragId,k,null);onDragEnd()}
+
+function moveStatus(id,status,note){
+  const p=state.parts.find(x=>x.id===id);if(!p||p.status===status)return;
+  p.history.push({id:uid(),from:p.status,to:status,note:note||null,user:getUser(),ts:nowIso()});
+  p.status=status;p.updated_at=nowIso();save();render();if(state.detailId===id)openDetail(id)
+}
+
+// Form modal
+function openForm(id){
+  state.editId=id||null;
+  const p=id?state.parts.find(x=>x.id===id):null;
+  const g=(k,d="")=>p?(p[k]??d):d;
+  const prioOpts=PRIOS.map(o=>`<option value="${o.k}" ${g("priority","normal")===o.k?"selected":""}>${o.l}</option>`).join("");
+  document.getElementById("modalRoot").innerHTML=`
+  <div class="overlay" onclick="if(event.target===this)closeModal()">
+    <div class="modal">
+      <div class="mhead"><div class="heading" style="font-size:20px">${id?"Parçayı Düzenle":"Yeni Parça Ekle"}</div>
+        <button class="iconbtn" onclick="closeModal()"><svg style="width:20px;height:20px"><use href="#i-x"/></svg></button></div>
+      <div class="mbody"><div class="grid2">
+        <div class="fld"><label>Sipariş No</label><input id="fm-order_no" value="${esc(g("order_no"))}" placeholder="SIP-2026-001"></div>
+        <div class="fld"><label>Parça Kodu *</label><input id="fm-part_code" value="${esc(g("part_code"))}" placeholder="PRÇ-2026-042"></div>
+        <div class="fld"><label>Parça Adı *</label><input id="fm-part_name" value="${esc(g("part_name"))}" placeholder="Redüktör Mil Flanşı"></div>
+        <div class="fld"><label>Adet</label><input id="fm-quantity" type="number" min="1" value="${g("quantity",1)}"></div>
+        <div class="fld"><label>Aciliyet</label><select id="fm-priority">${prioOpts}</select></div>
+        <div class="fld"><label>Hammadde Cinsi</label><input id="fm-material_type" list="mats" value="${esc(g("material_type"))}" placeholder="Çelik 4140">
+          <datalist id="mats">${MATERIALS.map(m=>`<option value="${m}">`).join("")}</datalist></div>
+        <div class="fld"><label>Hammadde Ölçüleri</label><input id="fm-material_dimensions" value="${esc(g("material_dimensions"))}" placeholder="Ø120x350 mm"></div>
+        <div class="fld"><label>Tezgah / İş İstasyonu</label><input id="fm-workstation" value="${esc(g("workstation"))}" placeholder="CNC Torna 1"></div>
+        <div class="fld"><label>Müşteri</label><input id="fm-customer" value="${esc(g("customer"))}" placeholder="Firma adı"></div>
+        <div class="fld"><label>Teslim Tarihi (Termin)</label><input id="fm-due_date" type="date" value="${esc(g("due_date"))}" style="color-scheme:dark"></div>
+        <div class="fld" style="grid-column:1/-1"><label>Notlar</label><textarea id="fm-notes" rows="2" placeholder="Ek açıklama…">${esc(g("notes"))}</textarea></div>
+      </div></div>
+      <div class="mfoot"><button class="btn btn-ghost" onclick="closeModal()">İptal</button>
+        <button class="btn btn-amber" onclick="saveForm()">${id?"Kaydet":"Oluştur"}</button></div>
+    </div></div>`;
+}
+function saveForm(){
+  const v=(k)=>document.getElementById("fm-"+k).value;
+  const code=v("part_code").trim(),name=v("part_name").trim();
+  if(!code||!name){alert("Parça kodu ve adı zorunludur");return}
+  const data={order_no:v("order_no").trim(),part_code:code,part_name:name,quantity:parseInt(v("quantity"))||1,
+    material_type:v("material_type").trim(),material_dimensions:v("material_dimensions").trim(),priority:v("priority"),
+    workstation:v("workstation").trim(),customer:v("customer").trim(),due_date:v("due_date")||"",notes:v("notes").trim()};
+  if(state.editId){const p=state.parts.find(x=>x.id===state.editId);Object.assign(p,data);p.updated_at=nowIso()}
+  else{const p={id:uid(),...data,status:"hammadde_siparis_edildi",drawings:[],created_by:getUser(),created_at:nowIso(),updated_at:nowIso(),
+       history:[{id:uid(),from:null,to:"hammadde_siparis_edildi",note:"Parça oluşturuldu",user:getUser(),ts:nowIso()}]};state.parts.unshift(p)}
+  save();closeModal();render()
+}
+function closeModal(){state.editId=null;document.getElementById("modalRoot").innerHTML=""}
+
+// Detail modal
+function openDetail(id){
+  state.detailId=id;const p=state.parts.find(x=>x.id===id);if(!p)return;
+  const st=SMAP[p.status],pr=PMAP[p.priority]||PMAP.normal,t=terminInfo(p);
+  const curIdx=STATUSES.findIndex(s=>s.k===p.status);
+  const specs=[["Sipariş No",p.order_no||"—"],["Adet",p.quantity+" adet"],["Hammadde",p.material_type||"—"],["Ölçüler",p.material_dimensions||"—"],["Tezgah",p.workstation||"—"],["Müşteri",p.customer||"—"],["Oluşturan",p.created_by||"—"],["Teslim Tarihi",fmtDate(p.due_date)]];
+  const pipe=STATUSES.map((s,i)=>`<div class="step ${i===curIdx?"active":""}" onclick="${i===curIdx?"":`changeFromDetail('${p.id}','${s.k}')`}">
+     <span class="sd" style="background:${i<=curIdx?s.c:'#334155'}"></span><span style="flex:1">${s.l}</span>${i===curIdx?'<span class="mono" style="font-size:10px;color:#F59E0B">ŞU AN</span>':''}</div>`).join("");
+  const draws=p.drawings.length?p.drawings.map(d=>`<div class="draw">
+     <div class="fi"><svg style="width:18px;height:18px"><use href="#i-file"/></svg></div>
+     <div style="flex:1;min-width:0"><div style="font-size:14px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${esc(d.name)}</div><div class="mono" style="font-size:11px;color:#64748B">${(d.size/1024).toFixed(0)} KB</div></div>
+     ${canPreview(d)?`<button class="iconbtn" onclick="openPreview('${p.id}','${d.id}')"><svg style="width:16px;height:16px"><use href="#i-eye"/></svg></button>`:""}
+     <a class="iconbtn" href="${d.dataUrl}" download="${esc(d.name)}"><svg style="width:16px;height:16px"><use href="#i-dl"/></svg></a>
+     <button class="iconbtn" style="color:#f87171" onclick="delDraw('${p.id}','${d.id}')"><svg style="width:16px;height:16px"><use href="#i-trash"/></svg></button>
+    </div>`).join(""):`<div style="border:1px dashed var(--border);border-radius:9px;padding:22px;text-align:center;color:#64748B;font-size:14px">PDF veya resim yükleyin</div>`;
+  const hist=[...p.history].reverse().map((h,i,arr)=>{const to=SMAP[h.to],from=h.from?SMAP[h.from]:null;
+     return `<div class="hist"><div class="line"><span class="hd" style="background:${to?to.c:'#64748b'}"></span>${i<arr.length-1?'<span class="bar"></span>':''}</div>
+       <div style="padding-bottom:8px;flex:1"><div style="font-size:14px">${from?`<span style="color:#64748B">${from.l}</span> › `:""}<b>${to?to.l:h.to}</b></div>
+       <div style="font-size:11px;color:#64748B;margin-top:2px">${esc(h.user)} · ${fmtDT(h.ts)}</div>${h.note?`<div style="font-size:12px;color:#94A3B8;font-style:italic;margin-top:3px">"${esc(h.note)}"</div>`:""}</div></div>`}).join("");
+  document.getElementById("modalRoot").innerHTML=`
+  <div class="overlay" onclick="if(event.target===this)closeModal()">
+    <div class="modal">
+      <div class="mhead">
+        <div><div class="code">${p.order_no?`Sip: ${esc(p.order_no)} · `:""}${esc(p.part_code)}</div>
+          <div class="heading" style="font-size:22px;margin-top:2px">${esc(p.part_name)}</div>
+          <div style="display:flex;gap:8px;margin-top:8px;flex-wrap:wrap">${badge(0,st.l,st.c)}${badge(0,pr.l,pr.c)}${t&&t.level!=="done"?`<span class="badge" style="color:${t.fg};border-color:${t.bd};background:${t.bg}">⏱ ${t.label}</span>`:""}</div></div>
+        <div style="display:flex;gap:4px">
+          <button class="iconbtn" onclick="openForm('${p.id}')"><svg style="width:18px;height:18px"><use href="#i-edit"/></svg></button>
+          <button class="iconbtn" style="color:#f87171" onclick="delPart('${p.id}')"><svg style="width:18px;height:18px"><use href="#i-trash"/></svg></button>
+          <button class="iconbtn" onclick="closeModal()"><svg style="width:20px;height:20px"><use href="#i-x"/></svg></button>
+        </div></div>
+      <div class="mbody"><div class="grid2" style="align-items:start">
+        <div style="display:flex;flex-direction:column;gap:16px">
+          <div class="grid2" style="gap:10px">${specs.map(([k,v])=>`<div class="spec"><div class="k">${k}</div><div class="v mono">${esc(v)}</div></div>`).join("")}</div>
+          ${p.notes?`<div class="spec"><div class="k">Notlar</div><div class="v" style="font-family:inherit">${esc(p.notes)}</div></div>`:""}
+          <div><div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px"><div class="k mono" style="color:#94A3B8;font-size:11px;text-transform:uppercase">Teknik Resimler (${p.drawings.length})</div>
+            <label class="btn" style="background:#0891b2;color:#fff;font-size:12px;padding:6px 12px;cursor:pointer"><svg style="width:14px;height:14px"><use href="#i-upload"/></svg> Yükle
+              <input type="file" accept=".pdf,.png,.jpg,.jpeg,.webp,.gif" style="display:none" onchange="uploadDraw('${p.id}',this)"></label></div>
+            <div style="display:flex;flex-direction:column;gap:8px">${draws}</div></div>
+        </div>
+        <div style="display:flex;flex-direction:column;gap:16px">
+          <div><div class="k mono" style="color:#94A3B8;font-size:11px;text-transform:uppercase;margin-bottom:8px">Üretim Aşaması</div><div class="pipe">${pipe}</div>
+            <textarea id="statusNote" rows="2" placeholder="Durum değişikliği notu (opsiyonel)…" style="width:100%;margin-top:10px"></textarea></div>
+          <div><div class="k mono" style="color:#94A3B8;font-size:11px;text-transform:uppercase;margin-bottom:10px">Durum Geçmişi</div>
+            <div style="max-height:280px;overflow:auto;padding-right:4px">${hist}</div></div>
+        </div>
+      </div></div>
+    </div></div>`;
+}
+function changeFromDetail(id,status){const note=document.getElementById("statusNote")?.value.trim();moveStatus(id,status,note||null)}
+function delPart(id){if(!confirm("Parça kalıcı olarak silinsin mi?"))return;state.parts=state.parts.filter(p=>p.id!==id);save();closeModal();render()}
+
+const CAD=["stl","obj","step","stp","dxf","dwg","igs","iges"];
+function extOf(n){return (n.split(".").pop()||"").toLowerCase()}
+function canPreview(d){return d.type?.startsWith("image/")||d.type==="application/pdf"}
+function uploadDraw(id,input){
+  const f=input.files[0];if(!f)return;
+  if(f.size>3*1024*1024){alert("Statik sürümde dosya en fazla 3 MB olabilir (tarayıcı kaydı sınırı).");return}
+  const r=new FileReader();
+  r.onload=()=>{const p=state.parts.find(x=>x.id===id);p.drawings.push({id:uid(),name:f.name,type:f.type||("."+extOf(f.name)),dataUrl:r.result,size:f.size,uploaded_at:nowIso()});p.updated_at=nowIso();
+    try{save()}catch(e){alert("Kayıt alanı doldu; dosya çok büyük olabilir.");p.drawings.pop();return}openDetail(id);render()};
+  r.readAsDataURL(f);
+}
+function delDraw(id,did){const p=state.parts.find(x=>x.id===id);p.drawings=p.drawings.filter(d=>d.id!==did);p.updated_at=nowIso();save();openDetail(id);render()}
+function openPreview(id,did){
+  const p=state.parts.find(x=>x.id===id),d=p.drawings.find(x=>x.id===did);
+  const inner = d.type?.startsWith("image/")
+    ? `<img src="${d.dataUrl}" style="max-width:100%;max-height:85vh;object-fit:contain;border-radius:8px" alt="${esc(d.name)}">`
+    : d.type==="application/pdf"
+      ? `<iframe src="${d.dataUrl}" style="width:80vw;height:85vh;border:none;border-radius:8px;background:#fff"></iframe>`
+      : `<a class="btn btn-out" href="${d.dataUrl}" download="${esc(d.name)}">Dosyayı İndir</a>`;
+  document.getElementById("previewRoot").innerHTML=`<div class="pvwrap" onclick="if(event.target===this)closePreview()">
+    <button class="iconbtn" style="position:absolute;top:16px;right:16px;color:#fff" onclick="closePreview()"><svg style="width:26px;height:26px"><use href="#i-x"/></svg></button>
+    <div onclick="event.stopPropagation()">${inner}<p class="mono" style="text-align:center;color:#cbd5e1;font-size:13px;margin-top:8px">${esc(d.name)}</p></div></div>`;
+}
+function closePreview(){document.getElementById("previewRoot").innerHTML=""}
+
+function exportCSV(){
+  const H=["Sipariş No","Parça Kodu","Parça Adı","Adet","Hammadde Cinsi","Hammadde Ölçüleri","Aciliyet","Durum","Tezgah","Müşteri","Teslim Tarihi","Teknik Resim","Oluşturan","Oluşturulma"];
+  const rows=state.parts.map(p=>[p.order_no,p.part_code,p.part_name,p.quantity,p.material_type,p.material_dimensions,(PMAP[p.priority]||{}).l||p.priority,(SMAP[p.status]||{}).l||p.status,p.workstation,p.customer,p.due_date,p.drawings.length,p.created_by,fmtDT(p.created_at)]);
+  const hist=[["Parça Kodu","Parça Adı","Önceki Durum","Yeni Durum","Not","Kullanıcı","Zaman"]];
+  state.parts.forEach(p=>p.history.forEach(h=>hist.push([p.part_code,p.part_name,h.from?(SMAP[h.from]||{}).l:"—",(SMAP[h.to]||{}).l||h.to,h.note||"",h.user,fmtDT(h.ts)])));
+  const q=(v)=>`"${String(v==null?"":v).replace(/"/g,'""')}"`;
+  const csv="PARÇALAR\n"+[H,...rows].map(r=>r.map(q).join(";")).join("\n")+"\n\nDURUM GEÇMİŞİ\n"+hist.map(r=>r.map(q).join(";")).join("\n");
+  const blob=new Blob(["\ufeff"+csv],{type:"text/csv;charset=utf-8"});
+  const a=document.createElement("a");a.href=URL.createObjectURL(blob);a.download="parcatakip_rapor_"+new Date().toISOString().slice(0,10)+".csv";a.click();URL.revokeObjectURL(a.href);
+}
+
+// init
+document.addEventListener("keydown",e=>{if(e.key==="Escape"){if(document.getElementById("previewRoot").innerHTML)closePreview();else closeModal()}});
+load();
+const un=document.getElementById("username");un.value=getUser();setUser(getUser());
+un.addEventListener("input",()=>setUser(un.value));
+render();
+</script>
+</body>
+</html>
