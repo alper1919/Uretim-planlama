@@ -1,0 +1,102 @@
+@import url('https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700;800;900&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600;700&display=swap');
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+    --bg-main: #0B0F17;
+    --bg-surface: #131926;
+    --bg-card: #1A2234;
+    --bg-card-hover: #232D42;
+    --border-subtle: #2A364F;
+    --border-highlight: #3B4D70;
+}
+
+* {
+    box-sizing: border-box;
+}
+
+body {
+    margin: 0;
+    font-family: 'Inter', system-ui, sans-serif;
+    background-color: var(--bg-main);
+    color: #F8FAFC;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+}
+
+.font-heading {
+    font-family: 'Outfit', sans-serif;
+}
+
+.font-mono {
+    font-family: 'JetBrains Mono', monospace;
+}
+
+::selection {
+    background: rgba(245, 158, 11, 0.3);
+    color: #fff;
+}
+
+/* Scrollbar */
+::-webkit-scrollbar {
+    height: 10px;
+    width: 10px;
+}
+::-webkit-scrollbar-track {
+    background: #0B0F17;
+}
+::-webkit-scrollbar-thumb {
+    background: #2A364F;
+    border-radius: 6px;
+}
+::-webkit-scrollbar-thumb:hover {
+    background: #3B4D70;
+}
+
+@keyframes fade-up {
+    from { opacity: 0; transform: translateY(12px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+.animate-fade-up {
+    animation: fade-up 0.4s ease forwards;
+}
+
+@keyframes pulse-dot {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.3; }
+}
+.animate-pulse-dot {
+    animation: pulse-dot 1.6s ease-in-out infinite;
+}
+
+@layer base {
+    :root {
+        --background: 222 40% 6%;
+        --foreground: 210 40% 98%;
+        --card: 222 33% 15%;
+        --card-foreground: 210 40% 98%;
+        --popover: 222 35% 11%;
+        --popover-foreground: 210 40% 98%;
+        --primary: 38 92% 50%;
+        --primary-foreground: 222 47% 6%;
+        --secondary: 222 30% 20%;
+        --secondary-foreground: 210 40% 98%;
+        --muted: 222 30% 18%;
+        --muted-foreground: 215 20% 65%;
+        --accent: 222 30% 22%;
+        --accent-foreground: 210 40% 98%;
+        --destructive: 0 72% 51%;
+        --destructive-foreground: 210 40% 98%;
+        --border: 222 27% 24%;
+        --input: 222 27% 24%;
+        --ring: 38 92% 50%;
+        --radius: 0.6rem;
+    }
+}
+
+@layer base {
+    * {
+        @apply border-border;
+    }
+}

@@ -1,0 +1,143 @@
+{
+  "identity_and_theme": {
+    "app_title": "ParçaTakip PRO - Ortak Ağ Üretim & İmalat Takip Sistemi",
+    "theme_mode": "dark",
+    "archetype": "THE PERFORMANCE PRO (Tactical Industrial Precision)",
+    "primary_language": "tr",
+    "target_users": "Fabrika Atölye Şefi, İşleme Operatörleri, Kalite Kontrol Uzmanı, Sevkiyat Sorumlusu, İmalat Müdürü",
+    "emotional_tone": "Rigorous, Tactical, High-Contrast, Error-Resistant, Machine-Shop Engineered"
+  },
+  "typography": {
+    "font_family_heading": "Cabinet Grotesk, Outfit, sans-serif",
+    "font_family_body": "Inter, system-ui, sans-serif",
+    "font_family_mono": "JetBrains Mono, Source Code Pro, monospace",
+    "headline_hero": "text-3xl sm:text-4xl lg:text-5xl font-extrabold tracking-tight",
+    "section_title": "text-xl sm:text-2xl lg:text-3xl font-bold tracking-tight",
+    "card_title": "text-base sm:text-lg font-semibold tracking-normal",
+    "badge_mono_specs": "font-mono text-xs uppercase tracking-wider font-semibold",
+    "hierarchy_gap_rule": "Header-to-body spacing within 2 Tailwind steps. Overlines must be UPPERCASE tracking-[0.2em] font-mono text-xs text-amber-400/90."
+  },
+  "colors": {
+    "background_main": "#0B0F17",
+    "background_surface": "#131926",
+    "background_card": "#1A2234",
+    "background_card_hover": "#232D42",
+    "border_subtle": "#2A364F",
+    "border_highlight": "#3B4D70",
+    "text_primary": "#F8FAFC",
+    "text_secondary": "#94A3B8",
+    "text_muted": "#64748B",
+    "status_pipeline_colors": {
+      "hammadde_siparis_edildi": {
+        "label": "Hammadde Sipariş Edildi",
+        "bg": "bg-amber-950/40",
+        "border": "border-amber-700/60",
+        "text": "text-amber-300",
+        "badge": "bg-amber-500/10 text-amber-400 border-amber-500/30",
+        "accent": "#F59E0B"
+      },
+      "hammadde_geldi": {
+        "label": "Hammadde Geldi",
+        "bg": "bg-blue-950/40",
+        "border": "border-blue-700/60",
+        "text": "text-blue-300",
+        "badge": "bg-blue-500/10 text-blue-400 border-blue-500/30",
+        "accent": "#3B82F6"
+      },
+      "isleme_alindi": {
+        "label": "İşleme Alındı",
+        "bg": "bg-orange-950/40",
+        "border": "border-orange-600/70",
+        "text": "text-orange-300",
+        "badge": "bg-orange-500/15 text-orange-400 border-orange-500/40 animate-pulse",
+        "accent": "#EA580C"
+      },
+      "uretim_bitti": {
+        "label": "Üretim Bitti",
+        "bg": "bg-indigo-950/40",
+        "border": "border-indigo-700/60",
+        "text": "text-indigo-300",
+        "badge": "bg-indigo-500/10 text-indigo-400 border-indigo-500/30",
+        "accent": "#6366F1"
+      },
+      "tesviyede": {
+        "label": "Tesviyede",
+        "bg": "bg-purple-950/40",
+        "border": "border-purple-700/60",
+        "text": "text-purple-300",
+        "badge": "bg-purple-500/10 text-purple-400 border-purple-500/30",
+        "accent": "#A855F7"
+      },
+      "kalite_kontrol": {
+        "label": "Kalite Kontrol",
+        "bg": "bg-cyan-950/40",
+        "border": "border-cyan-700/60",
+        "text": "text-cyan-300",
+        "badge": "bg-cyan-500/10 text-cyan-400 border-cyan-500/30",
+        "accent": "#06B6D4"
+      },
+      "sevk_alaninda": {
+        "label": "Sevk Alanında",
+        "bg": "bg-teal-950/40",
+        "border": "border-teal-700/60",
+        "text": "text-teal-300",
+        "badge": "bg-teal-500/10 text-teal-400 border-teal-500/30",
+        "accent": "#14B8A6"
+      },
+      "sevk_edildi": {
+        "label": "Sevk Edildi",
+        "bg": "bg-emerald-950/40",
+        "border": "border-emerald-700/60",
+        "text": "text-emerald-300",
+        "badge": "bg-emerald-500/10 text-emerald-400 border-emerald-500/30",
+        "accent": "#10B981"
+      }
+    }
+  },
+  "layout_and_grid": {
+    "dashboard_grid": "grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6",
+    "kanban_board": "flex gap-4 overflow-x-auto pb-6 snap-x min-h-[calc(100vh-220px)]",
+    "kanban_column": "w-80 flex-shrink-0 bg-[#131926] border border-[#2A364F] rounded-xl flex flex-col max-h-full",
+    "part_card": "bg-[#1A2234] hover:bg-[#232D42] border border-[#2A364F] hover:border-amber-500/50 rounded-lg p-4 transition-all shadow-md group relative cursor-pointer",
+    "form_modal": "max-w-3xl bg-[#131926] border border-[#2A364F] rounded-2xl shadow-2xl p-6 sm:p-8"
+  },
+  "key_features_and_components": {
+    "kanban_pipeline_view": "Drag-and-drop or quick stage transition buttons for all 8 status stages with instant status history tracking.",
+    "table_grid_view": "Dense list view with quick filters (search part code, raw material type, customer, target date, machine line).",
+    "part_creation_modal": "Includes fields for Part Code (Parça Kodu), Part Name (Parça Adı), Quantity (Adet), Raw Material Type (Hammedde Cinsi e.g. Alüminyum 7075, Çelik 4140, Paslanmaz 304, Kestamid), Raw Material Dimensions (Hammadde Ölçüleri e.g. Ø50x120 mm or 20x100x500 mm), Drawing Upload (Parça Teknik Resmi PDF/Image), Priority (Aciliyet), Workstation/Machine, and Notes.",
+    "technical_drawing_viewer": "Modal popup with drawing preview, full screen zoom, pan, rotate, and PDF/file download option.",
+    "status_history_timeline": "Comprehensive audit log displaying status changes (who changed it, timestamp, optional stage note/reason).",
+    "google_login_mock": "Simulated Google Sign-in with user identity switcher (e.g. Ahmet Şef - Atölye Şefi, Mehmet - CNC Operatörü, Ayşe - Kalite Kontrol).",
+    "network_status_indicator": "Shared Network LAN status badge showing 'Ortak Ağ Bağlı - Canlı Senkronizasyon (Local Network Connected - Live Synced)'."
+  },
+  "visual_enhancers": {
+    "card_glow": "hover:shadow-[0_0_20px_rgba(249,115,22,0.15)]",
+    "drawing_badge": "bg-cyan-950/70 text-cyan-300 border border-cyan-500/30 text-xs px-2.5 py-1 rounded-md font-mono flex items-center gap-1.5",
+    "material_chip": "bg-slate-800 text-slate-200 border border-slate-700 text-xs px-2 py-0.5 rounded font-mono",
+    "dimension_chip": "bg-amber-950/40 text-amber-300 border border-amber-800/50 text-xs px-2 py-0.5 rounded font-mono font-semibold"
+  },
+  "image_urls": {
+    "blueprints_drawing": "https://images.unsplash.com/photo-1769147339214-076740872485?crop=entropy&cs=srgb&fm=jpg&ixid=M3w4NjA1NzB8MHwxfHNlYXJjaHwzfHxjbmMlMjBtYWNoaW5pbmclMjBtZXRhbCUyMHBhcnRzJTIwaW5kdXN0cmlhbHxlbnwwfHx8fDE3ODg0NDExNTh8MA&ixlib=rb-4.1.0&q=85",
+    "cnc_cutting_sparks": "https://images.unsplash.com/photo-1735494033576-9c882e80504c?crop=entropy&cs=srgb&fm=jpg&ixid=M3w4NjA1NzB8MHwxfHNlYXJjaHwyfHxjbmMlMjBtYWNoaW5pbmclMjBtZXRhbCUyMHBhcnRzJTIwaW5kdXN0cmlhbHxlbnwwfHx8fDE3ODg0NDExNTh8MA&ixlib=rb-4.1.0&q=85",
+    "machined_gears": "https://images.unsplash.com/photo-1606337321936-02d1b1a4d5ef?crop=entropy&cs=srgb&fm=jpg&ixid=M3w4NjA1NzB8MHwxfHNlYXJjaHwxfHxjbmMlMjBtYWNoaW5pbmclMjBtZXRhbCUyMHBhcnRzJTIwaW5kdXN0cmlhbHxlbnwwfHx8fDE3ODg0NDExNTh8MA&ixlib=rb-4.1.0&q=85",
+    "quality_cmm_probe": "https://images.unsplash.com/photo-1585366958113-e28e8e580d3a?crop=entropy&cs=srgb&fm=jpg&ixid=M3w4NjA1NzB8MHwxfHNlYXJjaHw0fHxjbmMlMjBtYWNoaW5pbmclMjBtZXRhbCUyMHBhcnRzJTIwaW5kdXN0cmlhbHxlbnwwfHx8fDE3ODg0NDExNTh8MA&ixlib=rb-4.1.0&q=85"
+  },
+  "instructions_to_main_agent": [
+    "Ensure all 8 manufacturing statuses are clearly represented in both Kanban and Table views with their specific Turkish labels.",
+    "Add explicit data-testid to every interactive component (e.g., data-testid='add-part-button', data-testid='part-card-P101', data-testid='status-select-isleme_alindi').",
+    "Provide technical drawing file upload simulation (drag & drop PDF/DWG/PNG) with immediate technical drawing preview and full-screen view modal.",
+    "Implement status history logger that records timestamp, user name, avatar, previous status, and new status upon any status update.",
+    "Include sample real-world manufacturing data (e.g. Parça Kodu: PRÇ-2026-042, Parça Adı: Redüktör Mil Flanşı, Adet: 150, Hammadde Cinsi: Çelik 4140 (İslahlı), Hammadde Ölçüleri: Ø120x350 mm).",
+    "Ensure high contrast on dark surfaces for factory floor readability."
+  ],
+  "UNIVERSAL GUIDELINES FOR MAIN AGENT": [
+    "Dark colors look good when used independently without gradients. DO NOT use dark colors as gradients.",
+    "Avoid generic centered layouts, simplistic gradients, and uniform styling.",
+    "Create depth through layered design elements with z-index hierarchy.",
+    "Use glass-morphism effects with backdrop filters (12-24px blur) for sticky header and modal overlays.",
+    "You MUST NOT apply universal transition (e.g. transition: all). Add transitions for specific interactive elements excluding transforms.",
+    "You MUST NOT center align the app container. Maintain left-aligned, scannable industrial layout.",
+    "Every interaction needs micro-animations - hover states, status pulse indicators, and smooth state changes.",
+    "All interactive and key informational elements MUST include a data-testid attribute."
+  ]
+}
