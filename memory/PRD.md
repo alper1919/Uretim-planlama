@@ -44,5 +44,11 @@ Atölye şefi, CNC operatörü, kalite kontrol uzmanı, sevkiyat sorumlusu, imal
 - P2: Tarih bazlı filtre, gelişmiş raporlama (PDF)
 - P2: DWG için sunucu tarafı dönüştürme (gerçek DWG önizleme)
 
+## Tek Dosyalık Statik Sürüm (2026-06)
+- `/app/frontend/public/parcatakip-standalone.html` — backend'siz, localStorage tabanlı TEK HTML dosyası
+- Kapsam: landing + giriş (kullanıcı adı/şifre + "oturumu açık tut") + dashboard + Kanban + sürükle-bırak + filtreler + gecikme bandı + parça formu (sipariş no dahil) + detay modalı + 8 aşamalı akış + durum geçmişi + teknik resim yükleme + PDF (yeni sekme)/resim önizleme + CSV rapor + admin kullanıcı yönetimi
+- Varsayılan admin: admin / admin123 (localStorage). Veriler tarayıcıya özeldir; ortak veri YOK (bu yüzden asıl uygulama backend'li React sürümüdür)
+- Doğrulandı (2026-06): tarayıcıda landing→giriş→dashboard→detay→kullanıcılar→liste akışı screenshot ile test edildi, konsol hatası yok
+
 ## Sonraki Görevler
 Kullanıcı geri bildirimine göre iterasyon.
