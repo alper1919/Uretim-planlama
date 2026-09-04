@@ -24,7 +24,7 @@ export default function Login() {
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
 
-  useEffect(() => { if (!loading && user) navigate("/", { replace: true }); }, [user, loading, navigate]);
+  useEffect(() => { if (!loading && user) navigate("/app", { replace: true }); }, [user, loading, navigate]);
 
   const submit = async (e) => {
     e.preventDefault();
@@ -32,7 +32,7 @@ export default function Login() {
     setBusy(true);
     try {
       await login(username.trim(), password, remember);
-      navigate("/", { replace: true });
+      navigate("/app", { replace: true });
     } catch (err) {
       setError(errText(err.response?.data?.detail) || err.message);
     } finally {

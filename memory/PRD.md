@@ -35,7 +35,9 @@ Atölye şefi, CNC operatörü, kalite kontrol uzmanı, sevkiyat sorumlusu, imal
 - Gecikme bildirimi: giriş anında toast + kırmızı uyarı bandı, "Sadece Gecikenler" filtresi
 - Hızlı filtre çubuğu: müşteri / tezgah / aciliyet süzme + sonuç sayacı + temizle
 - Kimlik doğrulama: kullanıcı adı/şifre JWT (httpOnly cookie), "oturumu açık tut", admin-only kullanıcı yönetimi (ekle/listele/sil), RBAC admin/user
-- Testing agent: iterasyon 1 & 2 backend/frontend %100
+- Landing page (herkese açık `/`): tüm özellikleri tanıtan tanıtım sayfası, CTA → giriş/uygulama. Uygulama `/app`, giriş `/login`
+- PDF önizleme yeni sekmede (tarayıcı PDF görüntüleyici); panoda fare tekerleğiyle yatay kaydırma
+- Testing agent: iterasyonlar boyunca backend/frontend %100
 
 ## Backlog
 - P1: Parçaya birden fazla operatör atama / bildirimler
