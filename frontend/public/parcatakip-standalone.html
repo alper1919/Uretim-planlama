@@ -4,6 +4,7 @@
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 <title>ParçaTakip PRO · Üretim & İmalat Takip Sistemi</title>
+<script src="https://cdn.sheetjs.com/xlsx-0.20.3/package/dist/xlsx.full.min.js"></script>
 <style>
   :root{--bg:#0B0F17;--surface:#131926;--card:#1A2234;--cardh:#232D42;--border:#2A364F;--text:#F8FAFC;--muted:#94A3B8;--amber:#F59E0B;--red:#EF4444}
   *{box-sizing:border-box}
@@ -251,7 +252,7 @@
     <div class="toolbar">
       <input id="search" class="search" placeholder="Sipariş no, parça kodu, ad, hammadde, müşteri…" oninput="state.search=this.value;render()">
       <div class="seg"><button id="seg-kanban" class="active" onclick="setView('kanban')">Pano</button><button id="seg-table" onclick="setView('table')">Liste</button></div>
-      <button class="btn btn-out" onclick="exportCSV()"><svg style="width:16px;height:16px"><use href="#i-sheet"/></svg> Rapor (CSV)</button>
+      <button class="btn btn-out" onclick="exportXLSX()"><svg style="width:16px;height:16px"><use href="#i-sheet"/></svg> Rapor (Excel)</button>
       <button class="btn btn-amber" onclick="openForm()"><svg style="width:16px;height:16px"><use href="#i-plus"/></svg> Yeni Parça</button>
     </div>
     <div class="filterbar">
@@ -451,11 +452,20 @@ function openPreview(id,did){const p=state.parts.find(x=>x.id===id),d=p.drawings
   if(d.type==="application/pdf"){const w=window.open();if(w)w.document.write(`<iframe src="${d.dataUrl}" style="border:none;width:100%;height:100vh"></iframe><title>${esc(d.name)}</title>`);return}
   document.getElementById("previewRoot").innerHTML=`<div class="pvwrap" onclick="if(event.target===this)closePreview()"><button class="iconbtn" style="position:absolute;top:16px;right:16px;color:#fff" onclick="closePreview()"><svg style="width:26px;height:26px"><use href="#i-x"/></svg></button><div onclick="event.stopPropagation()"><img src="${d.dataUrl}" style="max-width:100%;max-height:85vh;object-fit:contain;border-radius:8px" alt="${esc(d.name)}"><p class="mono" style="text-align:center;color:#cbd5e1;font-size:13px;margin-top:8px">${esc(d.name)}</p></div></div>`}
 function closePreview(){document.getElementById("previewRoot").innerHTML=""}
-function exportCSV(){const H=["Sipariş No","Parça Kodu","Parça Adı","Adet","Hammadde Cinsi","Hammadde Ölçüleri","Aciliyet","Durum","Tezgah","Müşteri","Teslim Tarihi","Teknik Resim","Oluşturan","Oluşturulma"];
-  const rows=state.parts.map(p=>[p.order_no,p.part_code,p.part_name,p.quantity,p.material_type,p.material_dimensions,(PMAP[p.priority]||{}).l||p.priority,(SMAP[p.status]||{}).l||p.status,p.workstation,p.customer,p.due_date,p.drawings.length,p.created_by,fmtDT(p.created_at)]);
-  const hist=[["Parça Kodu","Parça Adı","Önceki Durum","Yeni Durum","Not","Kullanıcı","Zaman"]];state.parts.forEach(p=>p.history.forEach(h=>hist.push([p.part_code,p.part_name,h.from?(SMAP[h.from]||{}).l:"—",(SMAP[h.to]||{}).l||h.to,h.note||"",h.user,fmtDT(h.ts)])));
-  const q=(v)=>`"${String(v==null?"":v).replace(/"/g,'""')}"`;const csv="PARÇALAR\n"+[H,...rows].map(r=>r.map(q).join(";")).join("\n")+"\n\nDURUM GEÇMİŞİ\n"+hist.map(r=>r.map(q).join(";")).join("\n");
-  const blob=new Blob(["\ufeff"+csv],{type:"text/csv;charset=utf-8"});const a=document.createElement("a");a.href=URL.createObjectURL(blob);a.download="parcatakip_rapor_"+new Date().toISOString().slice(0,10)+".csv";a.click();URL.revokeObjectURL(a.href)}
+function exportXLSX(){
+  if(typeof XLSX==="undefined"){alert("Excel kütüphanesi yüklenemedi. İnternet bağlantınızı kontrol edip tekrar deneyin.");return}
+  const H=["Sipariş No","Parça Kodu","Parça Adı","Adet","Hammadde Cinsi","Hammadde Ölçüleri","Aciliyet","Durum","Tezgah","Müşteri","Teslim Tarihi","Teknik Resim","Oluşturan","Oluşturulma"];
+  const rows=state.parts.map(p=>[p.order_no||"",p.part_code,p.part_name,p.quantity,p.material_type||"",p.material_dimensions||"",(PMAP[p.priority]||{}).l||p.priority,(SMAP[p.status]||{}).l||p.status,p.workstation||"",p.customer||"",p.due_date||"",p.drawings.length,p.created_by||"",fmtDT(p.created_at)]);
+  const histH=["Parça Kodu","Parça Adı","Önceki Durum","Yeni Durum","Not","Kullanıcı","Zaman"];
+  const hist=[];state.parts.forEach(p=>p.history.forEach(h=>hist.push([p.part_code,p.part_name,h.from?(SMAP[h.from]||{}).l:"—",(SMAP[h.to]||{}).l||h.to,h.note||"",h.user,fmtDT(h.ts)])));
+  const wb=XLSX.utils.book_new();
+  const ws1=XLSX.utils.aoa_to_sheet([H,...rows]);
+  ws1["!cols"]=[{wch:14},{wch:16},{wch:24},{wch:7},{wch:20},{wch:18},{wch:10},{wch:20},{wch:16},{wch:20},{wch:13},{wch:12},{wch:12},{wch:18}];
+  const ws2=XLSX.utils.aoa_to_sheet([histH,...hist]);
+  ws2["!cols"]=[{wch:16},{wch:24},{wch:20},{wch:20},{wch:30},{wch:16},{wch:18}];
+  XLSX.utils.book_append_sheet(wb,ws1,"Parçalar");
+  XLSX.utils.book_append_sheet(wb,ws2,"Durum Geçmişi");
+  XLSX.writeFile(wb,"parcatakip_rapor_"+new Date().toISOString().slice(0,10)+".xlsx")}
 
 /* ---------- Landing content ---------- */
 function fillLanding(){
