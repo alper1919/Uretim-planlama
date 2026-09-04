@@ -1,28 +1,35 @@
-# Auth-Gated App Testing Playbook (Emergent Google Auth)
+# Auth Testing Playbook — Username/Password JWT (ParçaTakip PRO)
 
-This app uses Emergent-managed Google Auth with session cookies.
+Custom username/password auth. httpOnly cookie `access_token` (also accepts `Authorization: Bearer`).
+No public register. Admin-only user creation. RBAC roles: `admin`, `user`. Data (parts) is shared by all authenticated users; only /api/users* is admin-gated.
 
-## Test session (already seeded)
-- session_token: `seed_session_alper`
-- user email: alpergur827@gmail.com (name: Alper Gür)
+## Credentials (seeded)
+- Admin: username `admin`, password `admin123` (role admin)
+- Test user: username `operator1`, password `gizli123` (role user) — create via admin if missing
 
-## Backend API test
-Use header `Authorization: Bearer seed_session_alper`:
+## API tests
 ```
-curl -s $API/api/auth/me -H "Authorization: Bearer seed_session_alper"
-curl -s $API/api/parts -H "Authorization: Bearer seed_session_alper"
+API=$REACT_APP_BACKEND_URL
+# login (remember=true -> 30d cookie)
+curl -c c.txt -X POST $API/api/auth/login -H "Content-Type: application/json" -d '{"username":"admin","password":"admin123","remember":true}'
+curl -b c.txt $API/api/auth/me
+# wrong password -> 401
+curl -X POST $API/api/auth/login -H "Content-Type: application/json" -d '{"username":"admin","password":"x"}'
+# admin creates user
+curl -b c.txt -X POST $API/api/users -H "Content-Type: application/json" -d '{"username":"operator1","password":"gizli123","name":"Ahmet Usta","role":"user"}'
+curl -b c.txt $API/api/users
+# non-admin creating user -> 403
+curl -c o.txt -X POST $API/api/auth/login -H "Content-Type: application/json" -d '{"username":"operator1","password":"gizli123"}'
+curl -b o.txt -X POST $API/api/users -H "Content-Type: application/json" -d '{"username":"x","password":"y"}'   # expect 403
 ```
 
-## Browser test
-Set cookie then navigate to `/`:
-```
-await page.context.add_cookies([{
-  "name": "session_token", "value": "seed_session_alper",
-  "domain": "<app-domain>", "path": "/", "httpOnly": True, "secure": True, "sameSite": "None"
-}])
-await page.goto("https://<app>/")
-```
+## Browser
+- Login page data-testids: login-username, login-password, login-remember (checkbox), login-submit, login-error.
+- After admin login, header shows "Kullanıcılar" button (open-user-mgmt) → user-mgmt-modal with new-user-username/name/password/role + create-user-button + user-list rows.
+- Non-admin must NOT see the Kullanıcılar button.
+- "Oturumu açık tut" checked → cookie persists across browser restart (max_age 30d); unchecked → session cookie.
 
-## Notes
-- Do NOT test Google OAuth redirect flow end-to-end (external). Verify /api/auth/session exists and cookie/session logic via seeded token.
-- Success: /api/auth/me returns user; dashboard loads without redirect to /login.
+## Notes for auth debugging
+- Read this file + /app/memory/test_credentials.md for correct creds.
+- Check backend logs: `tail -n 100 /var/log/supervisor/backend.*.log`
+- bcrypt hashes start with $2b$; JWT_SECRET/ADMIN_* live in backend/.env.

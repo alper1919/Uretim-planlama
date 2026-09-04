@@ -11,6 +11,8 @@ from pathlib import Path
 from pydantic import BaseModel, Field
 from typing import List, Optional
 from datetime import datetime, timezone, timedelta
+import jwt
+import bcrypt
 
 ROOT_DIR = Path(__file__).parent
 load_dotenv(ROOT_DIR / '.env')
@@ -96,9 +98,9 @@ PRIORITY_LABELS = {"dusuk": "Düşük", "normal": "Normal", "yuksek": "Yüksek",
 
 class User(BaseModel):
     user_id: str
-    email: str
+    username: str
     name: str
-    picture: Optional[str] = None
+    role: str = "user"
 
 
 class DrawingFile(BaseModel):
@@ -160,60 +162,80 @@ class StatusUpdate(BaseModel):
     note: Optional[str] = None
 
 
-# ---------------- Auth ----------------
+# ---------------- Auth (JWT username/password) ----------------
+JWT_ALGORITHM = "HS256"
+
+
+def hash_password(p: str) -> str:
+    return bcrypt.hashpw(p.encode("utf-8"), bcrypt.gensalt()).decode("utf-8")
+
+
+def verify_password(p: str, h: str) -> bool:
+    try:
+        return bcrypt.checkpw(p.encode("utf-8"), h.encode("utf-8"))
+    except Exception:
+        return False
+
+
+def create_token(user_id: str, days: int) -> str:
+    payload = {"sub": user_id, "exp": datetime.now(timezone.utc) + timedelta(days=days), "type": "access"}
+    return jwt.encode(payload, os.environ["JWT_SECRET"], algorithm=JWT_ALGORITHM)
+
+
+def to_user(doc: dict) -> User:
+    return User(**{k: doc.get(k) for k in ("user_id", "username", "name", "role")})
+
+
+class LoginRequest(BaseModel):
+    username: str
+    password: str
+    remember: bool = False
+
+
+class UserCreate(BaseModel):
+    username: str
+    password: str
+    name: str = ""
+    role: str = "user"
+
+
 async def get_current_user(request: Request, authorization: Optional[str] = Header(None)) -> User:
-    token = request.cookies.get("session_token")
+    token = request.cookies.get("access_token")
     if not token and authorization and authorization.startswith("Bearer "):
         token = authorization.split(" ", 1)[1]
     if not token:
         raise HTTPException(status_code=401, detail="Not authenticated")
-    session = await db.user_sessions.find_one({"session_token": token}, {"_id": 0})
-    if not session:
-        raise HTTPException(status_code=401, detail="Invalid session")
-    expires_at = session["expires_at"]
-    if isinstance(expires_at, str):
-        expires_at = datetime.fromisoformat(expires_at)
-    if expires_at.tzinfo is None:
-        expires_at = expires_at.replace(tzinfo=timezone.utc)
-    if expires_at < datetime.now(timezone.utc):
-        raise HTTPException(status_code=401, detail="Session expired")
-    user_doc = await db.users.find_one({"user_id": session["user_id"]}, {"_id": 0})
+    try:
+        payload = jwt.decode(token, os.environ["JWT_SECRET"], algorithms=[JWT_ALGORITHM])
+    except jwt.ExpiredSignatureError:
+        raise HTTPException(status_code=401, detail="Token expired")
+    except jwt.InvalidTokenError:
+        raise HTTPException(status_code=401, detail="Invalid token")
+    user_doc = await db.users.find_one({"user_id": payload.get("sub")}, {"_id": 0})
     if not user_doc:
         raise HTTPException(status_code=401, detail="User not found")
-    return User(**user_doc)
+    return to_user(user_doc)
 
 
-@api_router.post("/auth/session")
-async def create_session(response: Response, x_session_id: str = Header(None)):
-    if not x_session_id:
-        raise HTTPException(status_code=400, detail="Missing session id")
-    resp = requests.get("https://demobackend.emergentagent.com/auth/v1/env/oauth/session-data",
-                        headers={"X-Session-ID": x_session_id}, timeout=30)
-    if resp.status_code != 200:
-        raise HTTPException(status_code=401, detail="Invalid session id")
-    data = resp.json()
-    email = data["email"]
-    existing = await db.users.find_one({"email": email}, {"_id": 0})
-    if existing:
-        user_id = existing["user_id"]
-        await db.users.update_one({"user_id": user_id},
-                                  {"$set": {"name": data.get("name"), "picture": data.get("picture")}})
-    else:
-        user_id = f"user_{uuid.uuid4().hex[:12]}"
-        await db.users.insert_one({
-            "user_id": user_id, "email": email, "name": data.get("name"),
-            "picture": data.get("picture"), "created_at": datetime.now(timezone.utc).isoformat(),
-        })
-    session_token = data["session_token"]
-    expires_at = datetime.now(timezone.utc) + timedelta(days=7)
-    await db.user_sessions.insert_one({
-        "user_id": user_id, "session_token": session_token,
-        "expires_at": expires_at.isoformat(), "created_at": datetime.now(timezone.utc).isoformat(),
-    })
-    response.set_cookie(key="session_token", value=session_token, httponly=True,
-                        secure=True, samesite="none", path="/", max_age=7 * 24 * 60 * 60)
-    user_doc = await db.users.find_one({"user_id": user_id}, {"_id": 0})
-    return User(**user_doc)
+async def require_admin(user: User = Depends(get_current_user)) -> User:
+    if user.role != "admin":
+        raise HTTPException(status_code=403, detail="Bu işlem için admin yetkisi gerekli")
+    return user
+
+
+@api_router.post("/auth/login", response_model=User)
+async def login(payload: LoginRequest, response: Response):
+    username = payload.username.strip().lower()
+    user_doc = await db.users.find_one({"username": username}, {"_id": 0})
+    if not user_doc or not verify_password(payload.password, user_doc.get("password_hash", "")):
+        raise HTTPException(status_code=401, detail="Kullanıcı adı veya şifre hatalı")
+    days = 30 if payload.remember else 1
+    token = create_token(user_doc["user_id"], days)
+    kwargs = dict(key="access_token", value=token, httponly=True, secure=True, samesite="none", path="/")
+    if payload.remember:
+        kwargs["max_age"] = days * 24 * 60 * 60
+    response.set_cookie(**kwargs)
+    return to_user(user_doc)
 
 
 @api_router.get("/auth/me", response_model=User)
@@ -222,11 +244,39 @@ async def auth_me(user: User = Depends(get_current_user)):
 
 
 @api_router.post("/auth/logout")
-async def logout(response: Response, request: Request):
-    token = request.cookies.get("session_token")
-    if token:
-        await db.user_sessions.delete_one({"session_token": token})
-    response.delete_cookie("session_token", path="/")
+async def logout(response: Response):
+    response.delete_cookie("access_token", path="/")
+    return {"ok": True}
+
+
+@api_router.get("/users", response_model=List[User])
+async def list_users(admin: User = Depends(require_admin)):
+    docs = await db.users.find({}, {"_id": 0}).sort("created_at", 1).to_list(1000)
+    return [to_user(d) for d in docs]
+
+
+@api_router.post("/users", response_model=User)
+async def create_user(payload: UserCreate, admin: User = Depends(require_admin)):
+    username = payload.username.strip().lower()
+    if not username or not payload.password:
+        raise HTTPException(status_code=400, detail="Kullanıcı adı ve şifre zorunludur")
+    if await db.users.find_one({"username": username}):
+        raise HTTPException(status_code=400, detail="Bu kullanıcı adı zaten kayıtlı")
+    role = "admin" if payload.role == "admin" else "user"
+    doc = {"user_id": f"user_{uuid.uuid4().hex[:12]}", "username": username,
+           "password_hash": hash_password(payload.password), "name": payload.name.strip() or username,
+           "role": role, "created_at": datetime.now(timezone.utc).isoformat()}
+    await db.users.insert_one(doc)
+    return to_user(doc)
+
+
+@api_router.delete("/users/{user_id}")
+async def delete_user(user_id: str, admin: User = Depends(require_admin)):
+    if user_id == admin.user_id:
+        raise HTTPException(status_code=400, detail="Kendinizi silemezsiniz")
+    res = await db.users.delete_one({"user_id": user_id})
+    if res.deleted_count == 0:
+        raise HTTPException(status_code=404, detail="Kullanıcı bulunamadı")
     return {"ok": True}
 
 
@@ -246,7 +296,7 @@ async def create_part(payload: PartCreate, user: User = Depends(get_current_user
     part = Part(**payload.model_dump(), created_by=user.name)
     part.history = [HistoryEntry(
         id=str(uuid.uuid4()), from_status=None, to_status=part.status,
-        note="Parça oluşturuldu", user_name=user.name, user_picture=user.picture, timestamp=now_iso(),
+        note="Parça oluşturuldu", user_name=user.name, user_picture=None, timestamp=now_iso(),
     )]
     await db.parts.insert_one(part.model_dump())
     return part
@@ -289,7 +339,7 @@ async def update_status(part_id: str, payload: StatusUpdate, user: User = Depend
         raise HTTPException(status_code=404, detail="Parça bulunamadı")
     entry = HistoryEntry(
         id=str(uuid.uuid4()), from_status=doc["status"], to_status=payload.status,
-        note=payload.note, user_name=user.name, user_picture=user.picture, timestamp=now_iso(),
+        note=payload.note, user_name=user.name, user_picture=None, timestamp=now_iso(),
     )
     await db.parts.update_one({"id": part_id}, {
         "$set": {"status": payload.status, "updated_at": now_iso()},
@@ -332,16 +382,17 @@ async def delete_drawing(part_id: str, drawing_id: str, user: User = Depends(get
 
 @api_router.get("/files/{path:path}")
 async def download_file(path: str, request: Request, authorization: Optional[str] = Header(None), auth: Optional[str] = Query(None)):
-    token = request.cookies.get("session_token")
+    token = request.cookies.get("access_token")
     if not token and authorization and authorization.startswith("Bearer "):
         token = authorization.split(" ", 1)[1]
     if not token and auth:
         token = auth
     if not token:
         raise HTTPException(status_code=401, detail="Not authenticated")
-    session = await db.user_sessions.find_one({"session_token": token}, {"_id": 0})
-    if not session:
-        raise HTTPException(status_code=401, detail="Invalid session")
+    try:
+        jwt.decode(token, os.environ["JWT_SECRET"], algorithms=[JWT_ALGORITHM])
+    except jwt.InvalidTokenError:
+        raise HTTPException(status_code=401, detail="Invalid token")
     part = await db.parts.find_one({"drawings.storage_path": path}, {"_id": 0})
     content_type = "application/octet-stream"
     filename = "file"
@@ -444,6 +495,26 @@ async def startup():
         logger.info("Storage initialized")
     except Exception as e:
         logger.error(f"Storage init failed: {e}")
+    try:
+        await db.users.create_index("username", unique=True)
+        admin_username = os.environ.get("ADMIN_USERNAME", "admin").strip().lower()
+        admin_password = os.environ["ADMIN_PASSWORD"]
+        admin_email = os.environ.get("ADMIN_EMAIL", "")
+        existing = await db.users.find_one({"username": admin_username})
+        if existing is None:
+            await db.users.insert_one({
+                "user_id": f"user_{uuid.uuid4().hex[:12]}", "username": admin_username,
+                "password_hash": hash_password(admin_password), "name": "Yönetici",
+                "role": "admin", "email": admin_email,
+                "created_at": datetime.now(timezone.utc).isoformat(),
+            })
+            logger.info("Admin user seeded")
+        elif not verify_password(admin_password, existing.get("password_hash", "")):
+            await db.users.update_one({"username": admin_username},
+                                      {"$set": {"password_hash": hash_password(admin_password), "role": "admin"}})
+            logger.info("Admin password updated")
+    except Exception as e:
+        logger.error(f"Admin seed failed: {e}")
 
 
 @app.on_event("shutdown")

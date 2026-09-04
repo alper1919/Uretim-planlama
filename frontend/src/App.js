@@ -1,10 +1,9 @@
-import { useState, useEffect, useMemo, useCallback } from "react";
-import { BrowserRouter, Routes, Route, useLocation, useNavigate } from "react-router-dom";
+import { useEffect } from "react";
+import { BrowserRouter, Routes, Route, useNavigate } from "react-router-dom";
 import "@/App.css";
 import { AuthProvider, useAuth } from "@/context/AuthContext";
 import { Toaster } from "@/components/ui/sonner";
 import Login from "@/pages/Login";
-import AuthCallback from "@/pages/AuthCallback";
 import Dashboard from "@/pages/Dashboard";
 import { Loader2 } from "lucide-react";
 
@@ -26,25 +25,15 @@ function Protected({ children }) {
   return children;
 }
 
-function AppRouter() {
-  const location = useLocation();
-  if (location.hash?.includes("session_id=")) {
-    return <AuthCallback />;
-  }
-  return (
-    <Routes>
-      <Route path="/login" element={<Login />} />
-      <Route path="/" element={<Protected><Dashboard /></Protected>} />
-    </Routes>
-  );
-}
-
 function App() {
   return (
     <div className="App">
       <BrowserRouter>
         <AuthProvider>
-          <AppRouter />
+          <Routes>
+            <Route path="/login" element={<Login />} />
+            <Route path="/" element={<Protected><Dashboard /></Protected>} />
+          </Routes>
           <Toaster position="top-right" theme="dark" />
         </AuthProvider>
       </BrowserRouter>

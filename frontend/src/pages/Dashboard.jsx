@@ -6,6 +6,7 @@ import { terminInfo } from "@/lib/termin";
 import PartCard from "@/components/PartCard";
 import PartFormModal from "@/components/PartFormModal";
 import PartDetailModal from "@/components/PartDetailModal";
+import UserManagement from "@/components/UserManagement";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
@@ -16,12 +17,13 @@ import {
 } from "@/components/ui/alert-dialog";
 import {
   Cog, Plus, Search, LayoutGrid, Table2, Wifi, LogOut, Loader2, Package, FileText,
-  FileSpreadsheet, AlertTriangle, Filter, X, BellRing,
+  FileSpreadsheet, AlertTriangle, Filter, X, BellRing, Users,
 } from "lucide-react";
 import { toast } from "sonner";
 
 export default function Dashboard() {
   const { user, logout } = useAuth();
+  const [showUsers, setShowUsers] = useState(false);
   const [parts, setParts] = useState([]);
   const [loading, setLoading] = useState(true);
   const [view, setView] = useState("kanban");
@@ -166,10 +168,21 @@ export default function Dashboard() {
               </span>
             </div>
           </div>
-          <div className="flex items-center gap-3">
+          <div className="flex items-center gap-2 sm:gap-3">
+            {user?.role === "admin" && (
+              <Button data-testid="open-user-mgmt" variant="ghost" size="sm" onClick={() => setShowUsers(true)}
+                className="text-slate-300 hover:text-white hover:bg-[#232D42]">
+                <Users className="w-4 h-4 sm:mr-1.5" /><span className="hidden sm:inline">Kullanıcılar</span>
+              </Button>
+            )}
             <div className="hidden md:flex items-center gap-2 pr-3 border-r border-[#2A364F]">
-              {user?.picture && <img src={user.picture} alt="" className="w-8 h-8 rounded-full border border-[#2A364F]" />}
-              <span className="text-sm text-slate-300">{user?.name}</span>
+              <div className="w-8 h-8 rounded-full bg-[#232D42] border border-[#2A364F] flex items-center justify-center text-amber-400 font-bold text-sm">
+                {(user?.name || user?.username || "K").charAt(0).toUpperCase()}
+              </div>
+              <div className="leading-tight">
+                <div className="text-sm text-slate-200">{user?.name}</div>
+                <div className="text-[10px] font-mono uppercase text-amber-400/80">{user?.role === "admin" ? "Yönetici" : "Kullanıcı"}</div>
+              </div>
             </div>
             <Button data-testid="logout-button" variant="ghost" size="sm" onClick={logout}
               className="text-slate-400 hover:text-white hover:bg-[#232D42]"><LogOut className="w-4 h-4" /></Button>
@@ -349,6 +362,7 @@ export default function Dashboard() {
       </main>
 
       <PartFormModal open={formOpen} onOpenChange={setFormOpen} editPart={editPart} onSaved={applyCreate} />
+      <UserManagement open={showUsers} onOpenChange={setShowUsers} currentUser={user} />
       <PartDetailModal part={detail} open={!!detail} onOpenChange={(o) => !o && setDetail(null)}
         onUpdated={applyUpdate} onEdit={openEdit} onDelete={setDeleteTarget} />
 

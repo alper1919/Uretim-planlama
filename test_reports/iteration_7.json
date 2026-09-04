@@ -1,0 +1,40 @@
+{
+  "summary": "Iteration 7 — Verified full auth replacement (Emergent Google -> custom username/password JWT with httpOnly cookie 'access_token'). Backend: 17/17 pytest pass (login OK+cookie, wrong pw 401, remember-me sets Max-Age vs session cookie, /auth/me via cookie + Bearer, admin can list/create/delete users, admin cannot delete self 400, non-admin gets 403 on /users, /parts requires auth 401, admin+operator can GET /parts, created_by uses logged-in user.name, logout clears cookie). Frontend: login page shows error on wrong creds, admin/admin123 login redirects to /, header shows Kullanıcılar (open-user-mgmt) for admin only, user-mgmt-modal creates+lists+deletes rows (create-user-button flow works end-to-end), kanban-board renders 6 existing parts (regression OK), logout returns to /login, operator1/gizli123 login succeeds and does NOT show open-user-mgmt button (RBAC UI OK).",
+  "backend_issues": {"critical": [], "minor": []},
+  "frontend_issues": {
+    "ui_bugs": [],
+    "integration_issues": [],
+    "design_issues": [
+      {"screen": "All Dialogs (part-detail-modal, part-form-modal, user-mgmt-modal, alert-dialog)", "issues": ["Radix a11y warning: Missing Description/aria-describedby for DialogContent — carried over across iterations 1,2,5,6,7. Non-blocking."]}
+    ]
+  },
+  "test_report_links": [
+    "/app/backend/tests/test_iteration7_auth.py",
+    "/app/test_reports/pytest/pytest_iter7.xml"
+  ],
+  "action_items": [
+    "OPTIONAL: Add DialogDescription in modals to silence Radix a11y warnings (deferred)."
+  ],
+  "critical_code_review_comments": [
+    "server.py login: username lowercased on both login and create — consistent. Good.",
+    "server.py create_user: role coerced to 'admin' or 'user' — safe (prevents privilege injection like role='superadmin').",
+    "server.py delete_user: correctly blocks self-delete with 400. Good.",
+    "server.py startup: re-hashes admin password if changed via env — good; and creates unique index on username.",
+    "AuthContext.login stores user in state (no token in JS — httpOnly cookie only). Correct.",
+    "Cookie set with secure=True, samesite='none' — required for cross-site preview iframe; works only over HTTPS (preview is HTTPS, OK).",
+    "OLD /api/files/{path} endpoint still reads cookie name 'session_token' (legacy) instead of 'access_token'. This means logged-in users can only fetch drawings via Bearer token or ?auth query, NOT via cookie. UI works because FilePreview.jsx uses axios (Bearer/cookie fallback via api instance), but any direct <img>/<iframe> to /api/files/{path} relying on the new access_token cookie will 401. Consider migrating to get_current_user to match new auth. Non-blocking as blob preview handles it, but inconsistent.",
+    "server.py ~520 lines — split into routers still recommended (carried from prior iterations)."
+  ],
+  "updated_files": [
+    "/app/backend/tests/test_iteration7_auth.py",
+    "/app/test_reports/pytest/pytest_iter7.xml",
+    "/app/test_reports/iteration_7.json"
+  ],
+  "success_rate": {"backend": "100% (17/17 pytest)", "frontend": "100% (login, wrong-creds error, admin RBAC UI, user create+delete, logout, operator RBAC hide)"},
+  "test_credentials": "admin/admin123 (admin), operator1/gizli123 (user)",
+  "seed_data_creation": "Created & deleted 'ui_testuser_1' via UI and 'testuser_<ts>' via pytest fixture. operator1 verified/created via admin. No leftover test users.",
+  "retest_needed": false,
+  "main_agent_can_self_test": true,
+  "context_for_next_testing_agent": "Auth is now custom username/password JWT with httpOnly cookie 'access_token' (also Bearer). Admin=admin/admin123, operator1/gizli123 seeded. NOTE: /api/files/{path} endpoint still uses legacy 'session_token' cookie name — not migrated. FilePreview.jsx uses axios with credentials so it works via cookie forwarding, but a direct browser <img src>/<iframe src> to /api/files would 401 with the new cookie. If future changes rely on direct file URLs, migrate download_file to use get_current_user.",
+  "rca of the issue": "N/A — no bugs found this iteration."
+}

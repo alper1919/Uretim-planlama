@@ -4,8 +4,8 @@
 Ortak ağda çalışacak parça takip programı. Durum akışı: hammadde sipariş edildi → hammadde geldi → işleme alındı → üretim bitti → tesviyede → kalite kontrol → sevk alanında → sevk edildi. Parça teknik resmi yüklenebilmeli; adet, hammadde cinsi, hammadde ölçüleri alanları olmalı.
 
 ## Kullanıcı Tercihleri
-- Giriş: Google ile (Emergent-managed Google Auth)
-- Rol yok, herkes aynı yetkide
+- Giriş: Kullanıcı adı & şifre (JWT, httpOnly cookie) + "Oturumu açık tut"
+- Kayıt kapalı; kullanıcıları yalnızca admin ekler. Roller: admin / user (RBAC)
 - Teknik resim: PDF + resim + CAD (DWG/DXF/STEP)
 - Durum geçmişi tutulacak (kim + ne zaman)
 - Tasarım: endüstriyel koyu tema (agent seçti)
@@ -34,6 +34,7 @@ Atölye şefi, CNC operatörü, kalite kontrol uzmanı, sevkiyat sorumlusu, imal
 - Sürükle-bırak Kanban: kartları kolonlar arası taşıyarak durum değiştirme
 - Gecikme bildirimi: giriş anında toast + kırmızı uyarı bandı, "Sadece Gecikenler" filtresi
 - Hızlı filtre çubuğu: müşteri / tezgah / aciliyet süzme + sonuç sayacı + temizle
+- Kimlik doğrulama: kullanıcı adı/şifre JWT (httpOnly cookie), "oturumu açık tut", admin-only kullanıcı yönetimi (ekle/listele/sil), RBAC admin/user
 - Testing agent: iterasyon 1 & 2 backend/frontend %100
 
 ## Backlog
