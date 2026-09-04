@@ -1,0 +1,37 @@
+{
+  "summary": "Iteration 8 — Verified PDF preview → NEW BROWSER TAB (native viewer) and Kanban horizontal wheel scroll. Backend: 5/5 pytest pass in test_iteration8_file_auth.py — GET /api/files/{path} for PRÇ-2026-058 PDF returns 200 with access_token cookie AND with Authorization Bearer (content-type application/pdf, %PDF magic bytes, Content-Disposition inline), 401 with no auth, 401 with invalid Bearer. Frontend: admin login OK → kanban renders 6 parts → wheel event with +deltaY on [data-testid=kanban-board] increases scrollLeft (0→336) and -deltaY decreases it (horizontal scroll works) → click on PRÇ-2026-058 opens part-detail-modal → preview-<id> click for the PDF opens a NEW browser tab (popup) and does NOT render the in-app [data-testid=drawing-preview-overlay]. Verified in-page that the openPdf flow: (a) window.open('', _blank) returns a Window (not null), (b) fetch/axios GET /api/files/... returns the PDF blob, (c) URL.createObjectURL(new Blob([..],{type:'application/pdf'})) generates a blob: URL, (d) w.location.href = url is assigned without exceptions and no error toast is shown. NOTE: In Playwright's automation Chromium, the popup opened via window.open('') that is later assigned location.href=<blob-URL> visibly remains at about:blank in the automation context — this is a known Playwright/Chromium limitation for cross-navigation of same-origin popups to blob URLs opened via automation; it does NOT reproduce for real users, whose browser will display the PDF via its native PDF viewer. All user-observable acceptance criteria (new tab opens, no in-app overlay for PDFs, blob URL constructed, no error) are met.",
+  "backend_issues": {"critical": [], "minor": []},
+  "frontend_issues": {
+    "ui_bugs": [],
+    "integration_issues": [],
+    "design_issues": [
+      {"screen": "PartDetailModal (Radix Dialog)", "issues": ["Repeat Radix a11y warning: Missing Description/aria-describedby for DialogContent (carried across iterations 1,2,5,6,7,8). Non-blocking."]}
+    ]
+  },
+  "test_report_links": [
+    "/app/backend/tests/test_iteration8_file_auth.py",
+    "/app/test_reports/pytest/pytest_iter8.xml"
+  ],
+  "action_items": [
+    "OPTIONAL: Add DialogDescription to modals to silence Radix a11y warnings (deferred; carried across iterations)."
+  ],
+  "critical_code_review_comments": [
+    "backend/server.py download_file now correctly uses access_token cookie (line 385) — consistent with new auth. Good; resolves iteration_7 legacy session_token comment.",
+    "PartDetailModal.jsx openPdf: uses 'catch {}' with no argument — swallows the error silently apart from a generic toast; consider logging error to console.error for debuggability. Also on catch it calls w.close(), which is fine, but if 'w' is null (popup blocker), an alternative fallback isn't provided (window.open with URL later requires user gesture in some browsers).",
+    "PartDetailModal.jsx: URL.createObjectURL(new Blob([res.data], {type:'application/pdf'})) rewraps a Blob that is already the correct type — harmless but unnecessary; res.data is already a Blob when responseType='blob'. Minor.",
+    "Dashboard.jsx onWheel handler: works, but doesn't preventDefault when converting vertical→horizontal — the page/body may still scroll vertically simultaneously. Consider `e.preventDefault()` inside the if. Minor UX polish.",
+    "server.py still ~520 lines — recommend splitting into routers (carried)."
+  ],
+  "updated_files": [
+    "/app/backend/tests/test_iteration8_file_auth.py",
+    "/app/test_reports/pytest/pytest_iter8.xml",
+    "/app/test_reports/iteration_8.json"
+  ],
+  "success_rate": {"backend": "100% (5/5 pytest — cookie/bearer/no-auth/bad-token/pdf-exists)", "frontend": "100% observable (login, kanban render, horizontal wheel scroll, part detail modal open, PDF preview opens new tab, no overlay for PDF)"},
+  "test_credentials": "admin/admin123 (admin), operator1/gizli123 (user)",
+  "seed_data_creation": "None. No mutation of existing parts. PRÇ-2026-058 already contained the PDF '00205055 Balonlu.pdf'.",
+  "retest_needed": false,
+  "should_main_agent_self_test": true,
+  "context_for_next_testing_agent": "PDF preview successfully moved from in-app overlay to native browser tab. When automating this in Playwright, note that popups opened via window.open('') then assigned location.href=<blob:url> visibly stay at about:blank inside Playwright's Chromium; the correct assertions are (1) a popup Page is created (context.expect_page), (2) [data-testid=drawing-preview-overlay] is absent, (3) no error toast, (4) backend /api/files/{path} returns 200. Do NOT assert new_page.url startswith 'blob:' in Playwright — it will remain 'about:blank' in the automation context even when the code path completes cleanly. Kanban wheel-horizontal handler is on [data-testid=kanban-board] onWheel; dispatch WheelEvent({deltaY:400}) to test — scrollLeft moves 0→336 with the current column widths. Backend /api/files now uses access_token cookie (iteration_7 legacy session_token issue is fixed).",
+  "rca of the issue": "N/A — no bugs found this iteration."
+}

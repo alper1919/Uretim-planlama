@@ -289,7 +289,8 @@ export default function Dashboard() {
         ) : parts.length === 0 ? (
           <EmptyState onAdd={openNew} />
         ) : view === "kanban" ? (
-          <div className="flex gap-4 overflow-x-auto pb-6 snap-x" data-testid="kanban-board">
+          <div className="flex gap-4 overflow-x-auto pb-6 snap-x" data-testid="kanban-board"
+            onWheel={(e) => { if (Math.abs(e.deltaY) > Math.abs(e.deltaX)) e.currentTarget.scrollLeft += e.deltaY; }}>
             {STATUSES.map((s) => {
               const items = filtered.filter((p) => p.status === s.key);
               return (

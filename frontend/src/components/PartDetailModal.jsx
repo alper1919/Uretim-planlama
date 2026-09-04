@@ -31,6 +31,18 @@ export default function PartDetailModal({ part, open, onOpenChange, onUpdated, o
   const [busy, setBusy] = useState(false);
   const [uploading, setUploading] = useState(false);
   const [preview, setPreview] = useState(null);
+
+  const openPdf = async (d) => {
+    const w = window.open("", "_blank");
+    try {
+      const res = await api.get(`/files/${d.storage_path}`, { responseType: "blob" });
+      const url = URL.createObjectURL(new Blob([res.data], { type: "application/pdf" }));
+      if (w) w.location.href = url; else window.open(url, "_blank");
+    } catch {
+      if (w) w.close();
+      toast.error("PDF açılamadı");
+    }
+  };
   const fileRef = useRef(null);
 
   useEffect(() => {
@@ -158,7 +170,7 @@ export default function PartDetailModal({ part, open, onOpenChange, onUpdated, o
                         <p className="text-[11px] text-slate-500 font-mono">{(d.size / 1024).toFixed(0)} KB</p>
                       </div>
                       {canPreview(d) && (
-                        <Button size="sm" variant="ghost" onClick={() => setPreview(d)}
+                        <Button size="sm" variant="ghost" onClick={() => (isPdf(d.content_type) ? openPdf(d) : setPreview(d))}
                           className="text-slate-400 hover:text-cyan-400 h-8 w-8 p-0" data-testid={`preview-${d.id}`}><Eye className="w-4 h-4" /></Button>
                       )}
                       <a href={fileUrl(d.storage_path)} target="_blank" rel="noreferrer"
